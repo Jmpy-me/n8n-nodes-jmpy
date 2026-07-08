@@ -25,4 +25,6 @@ yarn-error.log*
 
 # Custom registry files
 .npmrc
+
+# Lock files
 package-lock.json
