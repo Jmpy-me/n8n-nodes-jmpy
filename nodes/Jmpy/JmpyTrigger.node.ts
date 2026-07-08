@@ -768,7 +768,45 @@ function cleanResponseData(obj: any): any {
 }
 
 function formatUrlCreatedPayload(data: any) {
-	return cleanResponseData({ ...data });
+	const cleaned = cleanResponseData({ ...data });
+	const result: any = {
+		name: cleaned.name || '',
+		campaign_id: cleaned.campaign_id || null,
+		campaign_name: cleaned.campaign_name || null,
+		short_code: cleaned.short_code || '',
+		short_url: cleaned.short_url || '',
+		destination_url: cleaned.destination_url || cleaned.original_url || '',
+		is_password_protected: cleaned.is_password_protected ?? false,
+		expires_at: cleaned.expires_at || null,
+		is_dynamic: cleaned.is_dynamic ?? false,
+		tracking_enabled: cleaned.tracking_enabled ?? true,
+		created_at: cleaned.created_at || new Date().toISOString(),
+		source: cleaned.source || '',
+		qr_code_url: cleaned.qr_code_url || '',
+		qr_code_html: cleaned.qr_code_html || '',
+		qr_code_excel_sheet_formula: cleaned.qr_code_excel_sheet_formula || '',
+		qr_code_excel_sheet_formula_IMAGE: cleaned.qr_code_excel_sheet_formula_IMAGE || '',
+		short_code_id: cleaned.short_code_id || cleaned.id || '',
+		utm_source: cleaned.utm_source || null,
+		utm_medium: cleaned.utm_medium || null,
+		utm_campaign: cleaned.utm_campaign || null,
+		utm_term: cleaned.utm_term || null,
+		utm_content: cleaned.utm_content || null,
+		branded: cleaned.branded || 'no',
+		subdomain: cleaned.subdomain || null,
+		branded_domain: cleaned.branded_domain || null,
+		custom_alias: cleaned.custom_alias || null,
+		tags: cleaned.tags || [],
+		has_utm_params: cleaned.has_utm_params ?? false,
+	};
+
+	if (cleaned.safety_status && cleaned.safety_status !== 'safe') {
+		result.safety_status = cleaned.safety_status;
+		result.safety_reason = cleaned.safety_reason || '';
+		result.safety_report = cleaned.safety_report || null;
+	}
+	
+	return result;
 }
 
 function formatQrCreatedPayload(data: any) {
