@@ -329,7 +329,8 @@ export class JmpyTrigger implements INodeType {
 		default: {
 			async checkExists(this: IHookFunctions): Promise<boolean> {
 				const webhookData = this.getWorkflowStaticData('node');
-				return webhookData.webhookId !== undefined;
+				const workflowId = this.getWorkflow().id;
+				return webhookData.webhookId !== undefined && webhookData.workflowId === workflowId;
 			},
 
 			async create(this: IHookFunctions): Promise<boolean> {
@@ -470,6 +471,7 @@ export class JmpyTrigger implements INodeType {
 
 				const webhookData = this.getWorkflowStaticData('node');
 				webhookData.webhookId = responseData.id;
+				webhookData.workflowId = this.getWorkflow().id;
 				return true;
 			},
 
