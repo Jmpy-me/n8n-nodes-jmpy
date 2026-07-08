@@ -1,0 +1,48 @@
+{
+  "name": "n8n-nodes-jmpy",
+  "version": "1.0.0",
+  "description": "n8n community node for Jmpy.me URL shortener and QR generator",
+  "keywords": [
+    "n8n-community-node-package"
+  ],
+  "license": "MIT",
+  "homepage": "https://jmpy.me",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jmpy-me/n8n-nodes-jmpy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Jmpy-me/n8n-nodes-jmpy/issues"
+  },
+  "author": {
+    "name": "Jmpy.me",
+    "email": "support@jmpy.me"
+  },
+  "main": "dist/nodes/Jmpy/Jmpy.node.js",
+  "scripts": {
+    "build": "n8n-node build",
+    "dev": "n8n-node dev",
+    "prepublishOnly": "npm run build"
+  },
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/JmpyOAuth2Api.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/Jmpy/Jmpy.node.js",
+      "dist/nodes/Jmpy/JmpyTrigger.node.js",
+      "dist/nodes/Jmpy/JmpyPollingTrigger.node.js"
+    ]
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  },
+  "devDependencies": {
+    "@n8n/node-cli": "^0.23.0",
+    "@types/node": "^18.16.0",
+    "n8n": "^2.28.6",
+    "n8n-workflow": "^1.0.0",
+    "typescript": "^5.2.2"
+  }
+}
