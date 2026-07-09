@@ -139,7 +139,6 @@ function cleanResponseData(obj: any): any {
 	if (obj.id !== undefined) {
 		if (isQrCodeObj) {
 			obj.qr_code_id = obj.id;
-			obj.qr_code_uuid = obj.id;
 		} else {
 			obj.short_code_id = obj.id;
 		}
@@ -196,7 +195,7 @@ function formatUrlCreatedPayload(data: any) {
 		campaign_id: cleaned.campaign_id || null,
 		campaign_name: cleaned.campaign_name || null,
 		short_code: cleaned.short_code || '',
-		short_url: cleaned.short_url || '',
+		short_url: cleaned.short_url || (cleaned.branded_domain ? `https://${cleaned.branded_domain}/${cleaned.custom_alias || cleaned.short_code}` : (cleaned.subdomain ? `https://${cleaned.subdomain}.jmpy.me/${cleaned.custom_alias || cleaned.short_code}` : (cleaned.short_code ? `https://jmpy.me/${cleaned.short_code}` : ''))),
 		destination_url: cleaned.destination_url || cleaned.original_url || '',
 		is_password_protected: cleaned.is_password_protected ?? false,
 		expires_at: cleaned.expires_at || null,
@@ -245,6 +244,7 @@ function formatQrCodePayload(data: any) {
 	}
 
 	return {
+		qr_code_id: cleaned.qr_code_id || '',
 		name: cleaned.name || '',
 		content_type: cleaned.content_type || '',
 		content_url: contentUrl,
@@ -257,8 +257,6 @@ function formatQrCodePayload(data: any) {
 		tracking_enabled: cleaned.tracking_enabled ?? true,
 		created_at: cleaned.created_at || new Date().toISOString(),
 		qr_code_excel_sheet_formula_IMAGE: cleaned.qr_code_excel_sheet_formula_IMAGE || '',
-		qr_code_id: cleaned.qr_code_id || cleaned.qr_code_uuid || '',
-		qr_code_uuid: cleaned.qr_code_uuid || cleaned.qr_code_id || '',
 		branded: cleaned.branded || 'no',
 	};
 }

@@ -127,7 +127,6 @@ function cleanResponseData(obj: any): any {
 	if (obj.id !== undefined) {
 		if (isQrCodeObj) {
 			obj.qr_code_id = obj.id;
-			obj.qr_code_uuid = obj.id;
 		} else {
 			obj.short_code_id = obj.id;
 		}
@@ -645,8 +644,7 @@ export class JmpyPollingTrigger implements INodeType {
 						tracking_enabled: cleaned.tracking_enabled ?? true,
 						created_at: cleaned.created_at || new Date().toISOString(),
 						qr_code_excel_sheet_formula_IMAGE: cleaned.qr_code_excel_sheet_formula_IMAGE || '',
-						qr_code_id: cleaned.qr_code_id || cleaned.qr_code_uuid || '',
-						qr_code_uuid: cleaned.qr_code_uuid || cleaned.qr_code_id || '',
+						qr_code_id: cleaned.qr_code_id || '',
 						branded: cleaned.branded || 'no',
 					}
 				};
@@ -751,12 +749,12 @@ export class JmpyPollingTrigger implements INodeType {
 				if (event === 'newLinkClickUtm') {
 					return {
 						json: {
-							id: data.id || data.click_id || 'click_sample_123',
 							click_id: data.click_id || data.id || '',
+							short_id: data.short_id || data.short_url_id || data.short_code_id || data.link_id || '',
 							clicked_at: data.clicked_at || data.clickedAt || new Date().toISOString(),
 							destination_url: data.original_url || data.destination_url || '',
 							short_code: data.short_code || '',
-							short_url: data.short_url || '',
+							short_url: data.short_url || (data.branded_domain ? `https://${data.branded_domain}/${data.custom_alias || data.short_code}` : (data.subdomain ? `https://${data.subdomain}.jmpy.me/${data.custom_alias || data.short_code}` : (data.short_code ? `https://jmpy.me/${data.short_code}` : ''))),
 							utm_source: data.utm_source || data.utm?.utm_source || null,
 							utm_medium: data.utm_medium || data.utm?.utm_medium || null,
 							utm_campaign: data.utm_campaign || data.utm?.utm_campaign || null,
@@ -767,10 +765,10 @@ export class JmpyPollingTrigger implements INodeType {
 				}
 
 				const result: any = {
-					id: data.id || data.click_id || 'click_sample_123',
 					click_id: data.click_id || data.id || '',
+					short_id: data.short_id || data.short_url_id || data.short_code_id || data.link_id || '',
 					short_code: data.short_code || '',
-					short_url: data.short_url || '',
+					short_url: data.short_url || (data.branded_domain ? `https://${data.branded_domain}/${data.custom_alias || data.short_code}` : (data.subdomain ? `https://${data.subdomain}.jmpy.me/${data.custom_alias || data.short_code}` : (data.short_code ? `https://jmpy.me/${data.short_code}` : ''))),
 					destination_url: data.original_url || data.destination_url || '',
 					ip_address: data.ip_address || '',
 					clicked_at: data.clicked_at || data.clickedAt || new Date().toISOString(),
@@ -885,9 +883,8 @@ export class JmpyPollingTrigger implements INodeType {
 				const data = cleanResponseData({ ...s });
 				const includeUnique = event.includes('Unique');
 				const result: any = {
-					id: data.id || data.scan_id || 'scan_sample_123',
-					scan_id: data.scan_id || data.id || '',
 					qr_code_id: data.qr_code_id || '',
+					id: data.scan_id || data.id || '',
 					qr_code_name: data.qr_code_name || '',
 					content_type: data.content_type || 'url',
 					qr_content: data.qr_content || '',
@@ -899,49 +896,24 @@ export class JmpyPollingTrigger implements INodeType {
 					result.is_unique = data.is_unique ?? true;
 				}
 
-				if (data.geo) {
-					result.country = data.geo.country || data.country || '';
-					result.country_code = data.geo.country_code || data.country_code || '';
-					result.region = data.geo.region || data.region || '';
-					result.city = data.geo.city || data.city || '';
-					result.timezone = data.geo.timezone || data.timezone || '';
-				} else if (data.country || data.city) {
-					result.country = data.country || '';
-					result.country_code = data.country_code || '';
-					result.region = data.region || '';
-					result.city = data.city || '';
-					result.timezone = data.timezone || '';
-				}
+				result.country = data.country || data.geo?.country || '';
+				result.country_code = data.country_code || data.geo?.country_code || '';
+				result.region = data.region || data.geo?.region || '';
+				result.city = data.city || data.geo?.city || '';
+				result.timezone = data.timezone || data.geo?.timezone || '';
 
-				if (data.device) {
-					result.device_type = data.device.device_type || data.device_type || '';
-					result.device_brand = data.device.device_brand || data.device_brand || '';
-					result.device_model = data.device.device_model || data.device_model || '';
-					result.browser = data.device.browser || data.browser || '';
-					result.browser_version = data.device.browser_version || data.browser_version || '';
-					result.os = data.device.os || data.os || '';
-					result.os_version = data.device.os_version || data.os_version || '';
-				} else if (data.device_type || data.browser) {
-					result.device_type = data.device_type || '';
-					result.device_brand = data.device_brand || '';
-					result.device_model = data.device_model || '';
-					result.browser = data.browser || '';
-					result.browser_version = data.browser_version || '';
-					result.os = data.os || '';
-					result.os_version = data.os_version || '';
-				}
+				result.device_type = data.device_type || data.device?.device_type || '';
+				result.device_brand = data.device_brand || data.device?.device_brand || '';
+				result.device_model = data.device_model || data.device?.device_model || '';
+				result.browser = data.browser || data.device?.browser || '';
+				result.browser_version = data.browser_version || data.device?.browser_version || '';
+				result.os = data.os || data.device?.os || '';
+				result.os_version = data.os_version || data.device?.os_version || '';
 
-				if (data.traffic) {
-					result.traffic_source = data.traffic.traffic_source || data.traffic_source || '';
-					result.traffic_medium = data.traffic.traffic_medium || data.traffic_medium || '';
-					result.referer = data.traffic.referer || data.referer || data.referrer || '';
-					result.referrer_domain = data.traffic.referrer_domain || data.referrer_domain || '';
-				} else if (data.traffic_source || data.referer || data.referrer) {
-					result.traffic_source = data.traffic_source || '';
-					result.traffic_medium = data.traffic_medium || '';
-					result.referer = data.referer || data.referrer || '';
-					result.referrer_domain = data.referrer_domain || '';
-				}
+				result.traffic_source = data.traffic_source || data.traffic?.traffic_source || '';
+				result.traffic_medium = data.traffic_medium || data.traffic?.traffic_medium || '';
+				result.referer = data.referrer || data.referer || data.traffic?.referer || '';
+				result.referrer_domain = data.referrer_domain || data.traffic?.referrer_domain || '';
 
 				return { json: result };
 			});
