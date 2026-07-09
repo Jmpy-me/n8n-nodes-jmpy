@@ -5,6 +5,7 @@ import {
 	INodePropertyOptions,
 	INodeType,
 	INodeTypeDescription,
+	NodeApiError,
 } from 'n8n-workflow';
 
 import { urlOperations, urlFields } from './UrlDescription';
@@ -769,7 +770,7 @@ export class Jmpy implements INodeType {
 				if (this.continueOnFail()) {
 					returnData.push({ json: { error: (error as any).message } });
 				} else {
-					throw error;
+					throw new NodeApiError(this.getNode(), error as any);
 				}
 			}
 		}

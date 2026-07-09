@@ -1,5 +1,4 @@
 import {
-	IExecuteFunctions,
 	IPollFunctions,
 	INodeExecutionData,
 	INodeType,
@@ -483,7 +482,7 @@ export class JmpyPollingTrigger implements INodeType {
 
 				return response.body || response;
 			} catch (error: any) {
-				throw error;
+				throw new NodeApiError(this.getNode(), error);
 			}
 		};
 
@@ -743,7 +742,7 @@ export class JmpyPollingTrigger implements INodeType {
 			}
 
 			const formattedClicks = clicks.map((c: any) => {
-				const data = cleanResponseData({ ...c });
+				const data = { ...c };
 				const includeUnique = event.includes('Unique');
 				
 				if (event === 'newLinkClickUtm') {
@@ -755,11 +754,11 @@ export class JmpyPollingTrigger implements INodeType {
 							destination_url: data.original_url || data.destination_url || '',
 							short_code: data.short_code || '',
 							short_url: data.short_url || (data.branded_domain ? `https://${data.branded_domain}/${data.custom_alias || data.short_code}` : (data.subdomain ? `https://${data.subdomain}.jmpy.me/${data.custom_alias || data.short_code}` : (data.short_code ? `https://jmpy.me/${data.short_code}` : ''))),
-							utm_source: data.utm_source || data.utm?.utm_source || null,
-							utm_medium: data.utm_medium || data.utm?.utm_medium || null,
-							utm_campaign: data.utm_campaign || data.utm?.utm_campaign || null,
-							utm_term: data.utm_term || data.utm?.utm_term || null,
-							utm_content: data.utm_content || data.utm?.utm_content || null,
+							utm_source: data.utm?.utm_source || data.utm_source || null,
+							utm_medium: data.utm?.utm_medium || data.utm_medium || null,
+							utm_campaign: data.utm?.utm_campaign || data.utm_campaign || null,
+							utm_term: data.utm?.utm_term || data.utm_term || null,
+							utm_content: data.utm?.utm_content || data.utm_content || null,
 						}
 					};
 				}
@@ -880,7 +879,7 @@ export class JmpyPollingTrigger implements INodeType {
 			}
 
 			const formattedScans = scans.map((s: any) => {
-				const data = cleanResponseData({ ...s });
+				const data = { ...s };
 				const includeUnique = event.includes('Unique');
 				const result: any = {
 					qr_code_id: data.qr_code_id || '',

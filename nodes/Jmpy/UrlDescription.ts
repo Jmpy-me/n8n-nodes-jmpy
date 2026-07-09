@@ -275,7 +275,7 @@ export const urlFields: INodeProperties[] = [
 
 	// ----- URL: Delete -----
 	{
-		displayName: 'Short URL, or ID or short Code',
+		displayName: 'Short URL, or ID or Short Code',
 		name: 'shortUrlId',
 		type: 'string',
 		required: true,
@@ -286,7 +286,7 @@ export const urlFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'The Short URL, or ID or short Code of the URL to delete',
+		description: 'The Short URL, or ID or Short Code of the URL to delete',
 	},
 
 	// ----- URL: List -----
@@ -323,7 +323,7 @@ export const urlFields: INodeProperties[] = [
 
 	// ----- URL: Update -----
 	{
-		displayName: 'Short URL, or ID or short Code',
+		displayName: 'Short URL, or ID or Short Code',
 		name: 'shortUrlId',
 		type: 'string',
 		required: true,
@@ -334,7 +334,7 @@ export const urlFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'The Short URL, or ID or short Code of the URL to update',
+		description: 'The Short URL, or ID or Short Code of the URL to update',
 	},
 	{
 		displayName: 'New Destination URL',
