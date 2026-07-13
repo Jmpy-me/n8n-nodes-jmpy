@@ -700,21 +700,10 @@ export class Jmpy implements INodeType {
 							description: this.getNodeParameter('description', i) as string,
 							tags: this.getNodeParameter('tags', i) as string,
 						};
-					} else if (operation === 'get') {
-						toolName = 'getCampaign';
-						body = {
-							id: this.getNodeParameter('campaignId', i) as string,
-						};
 					} else if (operation === 'delete') {
 						toolName = 'deleteCampaign';
 						body = {
 							id: this.getNodeParameter('campaignId', i) as string,
-						};
-					} else if (operation === 'list') {
-						toolName = 'listCampaigns';
-						body = {
-							limit: this.getNodeParameter('limit', i) as number,
-							page: this.getNodeParameter('page', i) as number,
 						};
 					}
 				}

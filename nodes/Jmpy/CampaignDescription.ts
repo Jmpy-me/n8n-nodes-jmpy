@@ -19,18 +19,6 @@ export const campaignOperations: INodeProperties[] = [
 				action: 'Create a campaign',
 			},
 			{
-				name: 'Get Campaign Detail',
-				value: 'get',
-				description: 'Get details of a campaign by name or UUID',
-				action: 'Get a campaign',
-			},
-			{
-				name: 'List Campaigns',
-				value: 'list',
-				description: 'Get a list of all your campaigns',
-				action: 'List all campaigns',
-			},
-			{
 				name: 'Delete Campaign',
 				value: 'delete',
 				description: 'Delete a campaign',
@@ -87,7 +75,7 @@ export const campaignFields: INodeProperties[] = [
 		description: 'Tags for organizing and filtering campaigns (comma-separated)',
 	},
 
-	// ----- Campaign: Get Detail / Delete -----
+	// ----- Campaign: Delete -----
 	{
 		displayName: 'Campaign ID or Name',
 		name: 'campaignId',
@@ -96,42 +84,10 @@ export const campaignFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['campaign'],
-				operation: ['get', 'delete'],
+				operation: ['delete'],
 			},
 		},
 		default: '',
 		description: 'The unique ID or name of the campaign',
-	},
-
-	// ----- Campaign: List -----
-	{
-		displayName: 'Limit',
-		name: 'limit',
-		type: 'number',
-		displayOptions: {
-			show: {
-				resource: ['campaign'],
-				operation: ['list'],
-			},
-		},
-		typeOptions: {
-			minValue: 1,
-			maxValue: 100,
-		},
-		default: 50,
-		description: 'Max number of results to return',
-	},
-	{
-		displayName: 'Page',
-		name: 'page',
-		type: 'number',
-		displayOptions: {
-			show: {
-				resource: ['campaign'],
-				operation: ['list'],
-			},
-		},
-		default: 1,
-		description: 'Page number for pagination',
 	},
 ];

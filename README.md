@@ -44,8 +44,6 @@ Automate your URL shortening and marketing processes with these action nodes:
 
 ### 🎯 Campaign Management
 - **Create Campaign**: Group related URLs under a new campaign.
-- **Get Campaign Detail**: Fetch details of a campaign by its ID or name.
-- **List Campaigns**: Get a list of all your marketing campaigns.
 - **Delete Campaign**: Remove a campaign entirely.
 
 ---
