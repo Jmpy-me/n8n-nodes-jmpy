@@ -8,6 +8,22 @@ Unlock the full potential of Jmpy.me in your n8n workflows! This package provide
 To use this node, you need to create an OAuth API key from your Jmpy.me account and provide it to n8n.
 Go to `Settings -> API Keys` in Jmpy.me, create an App, and copy the Client ID and Secret to your n8n credentials for the `Jmpy.me OAuth2 API` connection.
 
+
+---
+
+## 📖 Usage Example
+
+Here is a step-by-step walkthrough of how to shorten a URL in your workflow:
+
+1. **Add the Jmpy.me node**: In the n8n canvas, click `+`, search for **Jmpy.me**, and add it.
+2. **Select Credentials**: Select your configured `Jmpy.me OAuth2 API` credentials.
+3. **Configure the Node**:
+   - **Resource**: `URL`
+   - **Operation**: `Shorten URL`
+4. **Set Parameters**:
+   - **Long URL**: `https://example.com`
+5. **Run / Test**: Click **Test Step**. The node will output the returned short URL and metadata (e.g. `shortUrl`, `longUrl`, campaign information, etc.) to use in subsequent nodes.
+
 ---
 
 ## ⚡ Actions (Available for all plans)

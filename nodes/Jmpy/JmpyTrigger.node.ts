@@ -37,12 +37,12 @@ const EVENT_TYPE_MAP: Record<string, string> = {
 	// URL events
 	'urlCreated': 'link.created',
 	'urlClicked': 'link.clicked',
-	'urlClickedUnique': 'link.clicked',
-	'urlClickedUtm': 'link.clicked',
+	'urlClickedUnique': 'link.clicked.unique',
+	'urlClickedUtm': 'link.clicked.utm',
 	// QR events
 	'qrCreated': 'qr.created',
 	'qrScanned': 'qr.scanned',
-	'qrScannedUnique': 'qr.scanned',
+	'qrScannedUnique': 'qr.scanned.unique',
 };
 
 export class JmpyTrigger implements INodeType {

@@ -827,20 +827,25 @@ export class JmpyPollingTrigger implements INodeType {
 				// Fallback
 			}
 
-			const responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'jmpyOAuth2Api', {
-				method: 'GET',
-				url: `${API_BASE_URL}/api/v1/qranalytics/recent`,
-				qs: {
-					limit: 20,
-				},
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: {
-					is_polling: true,
-				},
-				json: true,
-			});
+			let responseData;
+			try {
+				responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'jmpyOAuth2Api', {
+					method: 'GET',
+					url: `${API_BASE_URL}/api/v1/qranalytics/recent`,
+					qs: {
+						limit: 20,
+					},
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: {
+						is_polling: true,
+					},
+					json: true,
+				});
+			} catch (error) {
+				throw new NodeApiError(this.getNode(), error as any);
+			}
 
 			const data = parseMcpResponse(responseData);
 			let scans: any[] = [];

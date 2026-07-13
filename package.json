@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-jmpy",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "n8n community node for Jmpy.me URL shortener and QR generator",
   "keywords": [
     "n8n-community-node-package"
