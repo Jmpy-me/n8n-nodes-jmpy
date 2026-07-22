@@ -485,6 +485,147 @@ export const qrFields: INodeProperties[] = [
 		default: false,
 		description: 'Whether to enable scan tracking and analytics (only works for dynamic QR codes)',
 	},
+	{
+		displayName: 'Campaign Name or ID',
+		name: 'campaignId',
+		type: 'options',
+		typeOptions: {
+			loadOptionsMethod: 'getCampaigns',
+		},
+		displayOptions: {
+			show: {
+				resource: ['qrCode'],
+				operation: ['generate'],
+			},
+		},
+		default: '',
+		required: false,
+		description: 'Optionally associate this QR code with a Campaign',
+	},
+	{
+		displayName: 'QR Code Link Branding',
+		name: 'urlType',
+		type: 'options',
+		options: [
+			{ name: 'Standard (jmpy.me)', value: 'standard' },
+			{ name: 'Branded Domain', value: 'branded' },
+			{ name: 'Subdomain', value: 'subdomain' },
+		],
+		displayOptions: {
+			show: {
+				resource: ['qrCode'],
+				operation: ['generate'],
+			},
+		},
+		default: 'standard',
+		description: 'Choose whether the dynamic QR code short link uses a standard domain, branded domain, or subdomain',
+	},
+	{
+		displayName: 'Branded Domain',
+		name: 'brandedDomain',
+		type: 'options',
+		typeOptions: {
+			loadOptionsMethod: 'getBrandedDomains',
+		},
+		displayOptions: {
+			show: {
+				resource: ['qrCode'],
+				operation: ['generate'],
+				urlType: ['branded'],
+			},
+		},
+		default: '',
+		description: 'Select a verified branded domain',
+	},
+	{
+		displayName: 'Subdomain',
+		name: 'subdomain',
+		type: 'options',
+		typeOptions: {
+			loadOptionsMethod: 'getSubdomains',
+		},
+		displayOptions: {
+			show: {
+				resource: ['qrCode'],
+				operation: ['generate'],
+				urlType: ['subdomain'],
+			},
+		},
+		default: '',
+		description: 'Select a verified subdomain',
+	},
+
+	// UTM Parameters
+	{
+		displayName: 'UTM Source',
+		name: 'utmSource',
+		type: 'string',
+		displayOptions: {
+			show: {
+				resource: ['qrCode'],
+				operation: ['generate'],
+			},
+		},
+		default: '',
+		placeholder: 'google',
+		description: 'Optional. Identifies the advertiser/site. Must NOT contain spaces (use _ or - instead, e.g. "google" or "email_newsletter")',
+	},
+	{
+		displayName: 'UTM Medium',
+		name: 'utmMedium',
+		type: 'string',
+		displayOptions: {
+			show: {
+				resource: ['qrCode'],
+				operation: ['generate'],
+			},
+		},
+		default: '',
+		placeholder: 'qr_code',
+		description: 'Optional. Identifies the advertising medium. Must NOT contain spaces (use _ or - instead, e.g. "qr_code" or "cpc")',
+	},
+	{
+		displayName: 'UTM Campaign',
+		name: 'utmCampaign',
+		type: 'string',
+		displayOptions: {
+			show: {
+				resource: ['qrCode'],
+				operation: ['generate'],
+			},
+		},
+		default: '',
+		placeholder: 'summer_sale',
+		description: 'Optional. Identifies the specific campaign. Must NOT contain spaces (use _ or - instead, e.g. "summer_sale")',
+	},
+	{
+		displayName: 'UTM Term',
+		name: 'utmTerm',
+		type: 'string',
+		displayOptions: {
+			show: {
+				resource: ['qrCode'],
+				operation: ['generate'],
+			},
+		},
+		default: '',
+		placeholder: 'discount',
+		description: 'Optional. Identifies paid search keywords. Must NOT contain spaces (use _ or - instead, e.g. "discount_code")',
+	},
+	{
+		displayName: 'UTM Content',
+		name: 'utmContent',
+		type: 'string',
+		displayOptions: {
+			show: {
+				resource: ['qrCode'],
+				operation: ['generate'],
+			},
+		},
+		default: '',
+		placeholder: 'hero_banner',
+		description: 'Optional. Differentiates similar content or links. Must NOT contain spaces (use _ or - instead, e.g. "hero_banner")',
+	},
 
 	// ----- QR: Get Detail / Delete -----
 	{
@@ -514,14 +655,14 @@ export const qrFields: INodeProperties[] = [
 			},
 		},
 		typeOptions: {
-			minValue: 1,
+			minValue: 20,
 			maxValue: 100,
 		},
-		default: 50,
-		description: 'Max number of results to return',
+		default: 20,
+		description: 'Max number of results to return per page (min: 20, max: 100)',
 	},
 	{
-		displayName: 'Page',
+		displayName: 'Max Pages',
 		name: 'page',
 		type: 'number',
 		displayOptions: {
@@ -530,8 +671,12 @@ export const qrFields: INodeProperties[] = [
 				operation: ['list'],
 			},
 		},
+		typeOptions: {
+			minValue: 1,
+			maxValue: 10,
+		},
 		default: 1,
-		description: 'Page number for pagination',
+		description: 'Maximum number of pages to fetch (max: 10). E.g. setting 5 fetches pages 1 through 5 (or stops early if no more data exists)',
 	},
 
 	// ----- QR: Update -----
@@ -575,7 +720,6 @@ export const qrFields: INodeProperties[] = [
 		},
 		options: [
 			{ name: 'URL', value: 'url' },
-			{ name: 'Text', value: 'text' },
 		],
 		default: 'url',
 		description: 'The category of content to encode in the QR code',
@@ -596,21 +740,6 @@ export const qrFields: INodeProperties[] = [
 		description: 'The new destination URL to encode in the QR code',
 	},
 	{
-		displayName: 'New Text',
-		name: 'qrText',
-		type: 'string',
-		displayOptions: {
-			show: {
-				resource: ['qrCode'],
-				operation: ['update'],
-				contentType: ['text'],
-			},
-		},
-		default: '',
-		placeholder: 'Updated text content',
-		description: 'The new text content to encode in the QR code',
-	},
-	{
 		displayName: 'Tracking Enabled',
 		name: 'trackingEnabled',
 		type: 'boolean',
@@ -623,17 +752,5 @@ export const qrFields: INodeProperties[] = [
 		default: true,
 		description: 'Whether to enable scan tracking and analytics (only works for dynamic QR codes)',
 	},
-	{
-		displayName: 'New Expiration Date',
-		name: 'expiresAt',
-		type: 'dateTime',
-		displayOptions: {
-			show: {
-				resource: ['qrCode'],
-				operation: ['update'],
-			},
-		},
-		default: '',
-		description: 'New expiration date and time in ISO format',
-	},
 ];
+

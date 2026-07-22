@@ -275,7 +275,7 @@ export const urlFields: INodeProperties[] = [
 
 	// ----- URL: Delete -----
 	{
-		displayName: 'Short URL, or ID or Short Code',
+		displayName: 'Short URL or Short ID',
 		name: 'shortUrlId',
 		type: 'string',
 		required: true,
@@ -286,7 +286,8 @@ export const urlFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'The Short URL, or ID or Short Code of the URL to delete',
+		placeholder: 'e.g. https://jmpy.me/abc123 or abc123',
+		description: 'The Short URL or Short ID of the URL to delete',
 	},
 
 	// ----- URL: List -----
@@ -301,14 +302,14 @@ export const urlFields: INodeProperties[] = [
 			},
 		},
 		typeOptions: {
-			minValue: 1,
+			minValue: 20,
 			maxValue: 100,
 		},
-		default: 50,
-		description: 'Max number of results to return',
+		default: 20,
+		description: 'Max number of results to return per page (min: 20, max: 100)',
 	},
 	{
-		displayName: 'Page',
+		displayName: 'Max Pages',
 		name: 'page',
 		type: 'number',
 		displayOptions: {
@@ -317,13 +318,69 @@ export const urlFields: INodeProperties[] = [
 				operation: ['list'],
 			},
 		},
+		typeOptions: {
+			minValue: 1,
+			maxValue: 10,
+		},
 		default: 1,
-		description: 'Page number for pagination',
+		description: 'Maximum number of pages to fetch (max: 10). E.g. setting 5 fetches pages 1 through 5 (or stops early if no more data exists)',
+	},
+	{
+		displayName: 'Date Range',
+		name: 'dateRange',
+		type: 'options',
+		displayOptions: {
+			show: {
+				resource: ['url'],
+				operation: ['list'],
+			},
+		},
+		options: [
+			{ name: 'All Time', value: 'all_time' },
+			{ name: 'Last Hour', value: 'last_hour' },
+			{ name: 'Last 24 Hours', value: 'last_24_hours' },
+			{ name: 'Last 7 Days', value: 'last_7_days' },
+			{ name: 'Last 30 Days', value: 'last_30_days' },
+			{ name: 'Last Year', value: 'last_year' },
+			{ name: 'Custom Range', value: 'custom' },
+		],
+		default: 'all_time',
+		description: 'Filter URLs created within this date range',
+	},
+	{
+		displayName: 'Start Date',
+		name: 'startDate',
+		type: 'dateTime',
+		displayOptions: {
+			show: {
+				resource: ['url'],
+				operation: ['list'],
+				dateRange: ['custom'],
+			},
+		},
+		default: '',
+		placeholder: '2026-01-01T00:00:00Z',
+		description: 'Custom start date for filtering (ISO 8601 format)',
+	},
+	{
+		displayName: 'End Date',
+		name: 'endDate',
+		type: 'dateTime',
+		displayOptions: {
+			show: {
+				resource: ['url'],
+				operation: ['list'],
+				dateRange: ['custom'],
+			},
+		},
+		default: '',
+		placeholder: '2026-12-31T23:59:59Z',
+		description: 'Custom end date for filtering (ISO 8601 format)',
 	},
 
 	// ----- URL: Update -----
 	{
-		displayName: 'Short URL, or ID or Short Code',
+		displayName: 'Short URL or Short ID',
 		name: 'shortUrlId',
 		type: 'string',
 		required: true,
@@ -334,7 +391,8 @@ export const urlFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'The Short URL, or ID or Short Code of the URL to update',
+		placeholder: 'e.g. https://jmpy.me/abc123 or abc123',
+		description: 'The Short URL or Short ID of the URL to update',
 	},
 	{
 		displayName: 'New Destination URL',
@@ -363,6 +421,65 @@ export const urlFields: INodeProperties[] = [
 		default: '',
 		placeholder: 'My Updated Campaign',
 		description: 'New display name for the shortened URL',
+	},
+	{
+		displayName: 'Campaign Option',
+		name: 'campaignOption',
+		type: 'options',
+		displayOptions: {
+			show: {
+				resource: ['url'],
+				operation: ['update'],
+			},
+		},
+		options: [
+			{
+				name: 'No Campaign / Keep Unchanged',
+				value: 'none',
+			},
+			{
+				name: 'Select Existing Campaign',
+				value: 'existing',
+			},
+			{
+				name: 'Create New Campaign',
+				value: 'create',
+			},
+		],
+		default: 'none',
+		description: 'Choose whether to associate this short URL with a campaign',
+	},
+	{
+		displayName: 'Select Campaign',
+		name: 'campaignId',
+		type: 'options',
+		typeOptions: {
+			loadOptionsMethod: 'getCampaigns',
+		},
+		displayOptions: {
+			show: {
+				resource: ['url'],
+				operation: ['update'],
+				campaignOption: ['existing'],
+			},
+		},
+		default: '',
+		description: 'Choose one of your campaigns',
+	},
+	{
+		displayName: 'New Campaign Name',
+		name: 'newCampaignName',
+		type: 'string',
+		displayOptions: {
+			show: {
+				resource: ['url'],
+				operation: ['update'],
+				campaignOption: ['create'],
+			},
+		},
+		default: '',
+		placeholder: 'Winter Sale 2026',
+		description: 'Enter a name for the new campaign',
 	},
 	{
 		displayName: 'New Custom Alias',

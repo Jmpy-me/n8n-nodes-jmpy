@@ -7,9 +7,10 @@ import {
 	INodePropertyOptions,
 	ILoadOptionsFunctions,
 	NodeApiError,
+	NodeOperationError,
 } from 'n8n-workflow';
 
-// Use the same ngrok base URL as the main node for dev
+// Base URL for Jmpy.me API
 const API_BASE_URL = 'https://jmpy.me';
 
 function parseMcpResponse(response: any): any {
@@ -264,14 +265,185 @@ export class JmpyTrigger implements INodeType {
 					},
 				},
 			},
+			...((() => {
+				const webhookUrlEnv = process.env.WEBHOOK_URL || '';
+				const isLocal = !webhookUrlEnv ||
+					webhookUrlEnv.includes('localhost') ||
+					webhookUrlEnv.includes('127.0.0.1') ||
+					webhookUrlEnv.includes('192.168.') ||
+					webhookUrlEnv.includes('10.');
+				if (isLocal) {
+					return [{
+						displayName: 'Webhook Tunnel URL / Host Override',
+						name: 'webhookTunnelUrl',
+						type: 'string' as const,
+						default: '',
+						required: false,
+						placeholder: 'https://xxxx.ngrok-free.dev',
+						description: 'If you access n8n via a tunnel (e.g. ngrok, Cloudflare) and get a localhost error, enter your public tunnel URL here to override the domain.',
+					}];
+				}
+				return [];
+			})()),
+			// Campaign filter
 			{
-				displayName: 'Webhook Tunnel URL / Host Override',
-				name: 'webhookTunnelUrl',
-				type: 'string',
+				displayName: 'Campaign Name or ID',
+				name: 'campaignId',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getCampaigns',
+				},
 				default: '',
 				required: false,
-				placeholder: 'https://xxxx.ngrok-free.dev',
-				description: 'If you access n8n via a tunnel (e.g. ngrok, Cloudflare) and get a localhost error, enter your public tunnel URL here to override the domain.',
+				description: 'Select a Campaign to filter by. Only events for URLs/QRs inside this campaign will trigger.',
+			},
+			{
+				displayName: 'Link Branding',
+				name: 'url_type',
+				type: 'multiOptions',
+				options: [
+					{ name: 'Standard (jmpy.me)', value: 'standard' },
+					{ name: 'Branded Domain', value: 'branded' },
+					{ name: 'Subdomain', value: 'subdomain' },
+				],
+				default: [],
+				displayOptions: {
+					show: {
+						event: [
+							'urlCreated',
+							'urlClicked',
+							'urlClickedUnique',
+							'urlClickedUtm',
+						],
+					},
+				},
+				description: 'Filter by link structure style. Leave empty to match all link types.',
+			},
+			{
+				displayName: 'QR code Link Branding',
+				name: 'url_type',
+				type: 'multiOptions',
+				options: [
+					{ name: 'Standard (jmpy.me)', value: 'standard' },
+					{ name: 'Branded Domain', value: 'branded' },
+					{ name: 'Subdomain', value: 'subdomain' },
+				],
+				default: [],
+				displayOptions: {
+					show: {
+						event: [
+							'qrCreated',
+							'qrScanned',
+							'qrScannedUnique',
+						],
+					},
+				},
+				description: 'Filter by QR code branding style. Leave empty to match all branding types.',
+			},
+			{
+				displayName: 'Branded Domains',
+				name: 'branded_domain',
+				type: 'multiOptions',
+				typeOptions: {
+					loadOptionsMethod: 'getBrandedDomains',
+				},
+				default: [],
+				displayOptions: {
+					show: {
+						url_type: [
+							'branded',
+						],
+					},
+				},
+				description: 'Filter by specific branded domains. If empty, triggers for all branded domains. (Only applies to Branded Domain Link Branding).',
+			},
+			{
+				displayName: 'Subdomains',
+				name: 'subdomain',
+				type: 'multiOptions',
+				typeOptions: {
+					loadOptionsMethod: 'getSubdomains',
+				},
+				default: [],
+				displayOptions: {
+					show: {
+						url_type: [
+							'subdomain',
+						],
+					},
+				},
+				description: 'Filter by specific subdomains. If empty, triggers for all subdomains. (Only applies to Subdomain Link Branding).',
+			},
+			// Additional filters
+			{
+				displayName: 'Filters',
+				name: 'filters',
+				type: 'collection',
+				placeholder: 'Add Filter',
+				default: {},
+				description: 'Filter the events by payload values before triggering',
+				options: [
+					{
+						displayName: 'Is Dynamic',
+						name: 'is_dynamic',
+						type: 'boolean',
+						default: false,
+						description: 'Whether the URL or QR code is dynamic. Use case: monitor links where the destination can change.',
+					},
+					{
+						displayName: 'Is Password Protected',
+						name: 'is_password_protected',
+						type: 'boolean',
+						default: false,
+						description: 'Whether the URL or QR code has password protection. Use case: track scans/clicks of secure assets.',
+					},
+					{
+						displayName: 'Has UTM Parameters',
+						name: 'has_utm_params',
+						type: 'boolean',
+						default: false,
+						displayOptions: {
+							hide: {
+								'/event': [
+									'qrCreated',
+									'qrScanned',
+									'qrScannedUnique',
+								],
+							},
+						},
+						description: 'Only trigger if the link contains Google Analytics UTM tracking parameters. Use case: track marketing campaigns.',
+					},
+					{
+						displayName: 'Tags (Comma-Separated)',
+						name: 'tags',
+						type: 'string',
+						default: '',
+						displayOptions: {
+							hide: {
+								'/event': [
+									'qrCreated',
+									'qrScanned',
+									'qrScannedUnique',
+								],
+							},
+						},
+						description: 'Only trigger if the link/QR code contains all these specified tags. Separate tags with commas. Use case: filter by custom tag categories.',
+					},
+					{
+						displayName: 'Is Expiring',
+						name: 'is_expiring',
+						type: 'boolean',
+						default: false,
+						description: 'Only trigger for links/QR codes that have a set expiration date/time configured. Use case: track temporary links.',
+					},
+					{
+						displayName: 'Custom Alias',
+						name: 'custom_alias',
+						type: 'boolean',
+						default: false,
+						description: 'Whether the short URL has a custom alias. Use case: track links with any custom alias.',
+					},
+				],
 			},
 		],
 	};
@@ -280,6 +452,13 @@ export class JmpyTrigger implements INodeType {
 		loadOptions: {
 			async getShortUrls(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 				try {
+					const credentials = await this.getCredentials('jmpyOAuth2Api');
+					if (!credentials || !credentials.oauthTokenData || !(credentials.oauthTokenData as any).access_token) {
+						throw new NodeApiError(this.getNode(), { message: 'Authentication required' } as any, {
+							message: 'Authentication required',
+							description: 'Please connect and authenticate your Jmpy.me account first.',
+						});
+					}
 					const responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'jmpyOAuth2Api', {
 						method: 'POST',
 						url: `${API_BASE_URL}/mcp/execute/listUrls`,
@@ -297,11 +476,18 @@ export class JmpyTrigger implements INodeType {
 					}
 					return options;
 				} catch (error) {
-					return [];
+					throw new NodeApiError(this.getNode(), error as any);
 				}
 			},
 			async getQrCodes(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 				try {
+					const credentials = await this.getCredentials('jmpyOAuth2Api');
+					if (!credentials || !credentials.oauthTokenData || !(credentials.oauthTokenData as any).access_token) {
+						throw new NodeApiError(this.getNode(), { message: 'Authentication required' } as any, {
+							message: 'Authentication required',
+							description: 'Please connect and authenticate your Jmpy.me account first.',
+						});
+					}
 					const responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'jmpyOAuth2Api', {
 						method: 'POST',
 						url: `${API_BASE_URL}/mcp/execute/listQrCodes`,
@@ -319,7 +505,88 @@ export class JmpyTrigger implements INodeType {
 					}
 					return options;
 				} catch (error) {
-					return [];
+					throw new NodeApiError(this.getNode(), error as any);
+				}
+			},
+			async getCampaigns(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				try {
+					const credentials = await this.getCredentials('jmpyOAuth2Api');
+					if (!credentials || !credentials.oauthTokenData || !(credentials.oauthTokenData as any).access_token) {
+						throw new NodeApiError(this.getNode(), { message: 'Authentication required' } as any, {
+							message: 'Authentication required',
+							description: 'Please connect and authenticate your Jmpy.me account first.',
+						});
+					}
+					const responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'jmpyOAuth2Api', {
+						method: 'POST',
+						url: `${API_BASE_URL}/mcp/execute/listCampaigns`,
+						body: { limit: 100, is_polling: true },
+						json: true,
+					});
+					const data = parseMcpResponse(responseData);
+					const items = data.campaigns || [];
+					return items.map((item: any) => ({
+						name: item.name,
+						value: item.id,
+					}));
+				} catch (error) {
+					throw new NodeApiError(this.getNode(), error as any);
+				}
+			},
+			async getSubdomains(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				try {
+					const credentials = await this.getCredentials('jmpyOAuth2Api');
+					if (!credentials || !credentials.oauthTokenData || !(credentials.oauthTokenData as any).access_token) {
+						throw new NodeApiError(this.getNode(), { message: 'Authentication required' } as any, {
+							message: 'Authentication required',
+							description: 'Please connect and authenticate your Jmpy.me account first.',
+						});
+					}
+					const responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'jmpyOAuth2Api', {
+						method: 'POST',
+						url: `${API_BASE_URL}/mcp/execute/getUserSubdomains`,
+						body: {},
+						json: true,
+					});
+					const data = parseMcpResponse(responseData);
+					const items = data.subdomains || [];
+					if (items.length === 0) {
+						return [{ name: 'No subdomain is added yet', value: '' }];
+					}
+					return items.map((item: any) => ({
+						name: item.subdomain || item.name || item.fullDomain || item.id,
+						value: item.subdomain || item.name || item.id,
+					}));
+				} catch (error) {
+					throw new NodeApiError(this.getNode(), error as any);
+				}
+			},
+			async getBrandedDomains(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				try {
+					const credentials = await this.getCredentials('jmpyOAuth2Api');
+					if (!credentials || !credentials.oauthTokenData || !(credentials.oauthTokenData as any).access_token) {
+						throw new NodeApiError(this.getNode(), { message: 'Authentication required' } as any, {
+							message: 'Authentication required',
+							description: 'Please connect and authenticate your Jmpy.me account first.',
+						});
+					}
+					const responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'jmpyOAuth2Api', {
+						method: 'POST',
+						url: `${API_BASE_URL}/mcp/execute/getUserDomains`,
+						body: {},
+						json: true,
+					});
+					const data = parseMcpResponse(responseData);
+					const items = data.branded || [];
+					if (items.length === 0) {
+						return [{ name: 'No branded domain is added yet', value: '' }];
+					}
+					return items.map((item: any) => ({
+						name: item.domain,
+						value: item.domain,
+					}));
+				} catch (error) {
+					throw new NodeApiError(this.getNode(), error as any);
 				}
 			},
 		},
@@ -366,7 +633,50 @@ export class JmpyTrigger implements INodeType {
 				const body: any = {
 					event_type: eventType,
 					target_url: webhookUrl,
+					filters: {},
 				};
+
+				try {
+					const campaignId = this.getNodeParameter('campaignId') as string;
+					if (campaignId) {
+						body.filters.campaign_id = campaignId;
+					}
+				} catch (e) {}
+
+				try {
+					const urlType = (this.getNodeParameter('url_type') as string[] || []).filter(Boolean);
+					if (urlType && urlType.length > 0) {
+						body.filters.url_type = urlType;
+					}
+				} catch (e) {}
+
+				try {
+					const brandedDomain = (this.getNodeParameter('branded_domain') as string[] || []).filter(Boolean);
+					if (brandedDomain && brandedDomain.length > 0) {
+						body.filters.branded_domain = brandedDomain;
+					}
+				} catch (e) {}
+
+				try {
+					const subdomain = (this.getNodeParameter('subdomain') as string[] || []).filter(Boolean);
+					if (subdomain && subdomain.length > 0) {
+						body.filters.subdomain = subdomain;
+					}
+				} catch (e) {}
+
+				try {
+					const filterValues = this.getNodeParameter('filters') as any;
+					if (filterValues) {
+						if (filterValues.is_dynamic !== undefined) body.filters.is_dynamic = filterValues.is_dynamic;
+						if (filterValues.is_password_protected !== undefined) body.filters.is_password_protected = filterValues.is_password_protected;
+						if (filterValues.has_utm_params !== undefined) body.filters.has_utm_params = filterValues.has_utm_params;
+						if (filterValues.is_expiring !== undefined) body.filters.is_expiring = filterValues.is_expiring;
+						if (filterValues.custom_alias !== undefined) body.filters.custom_alias = filterValues.custom_alias;
+						if (filterValues.tags) {
+							body.filters.tags = filterValues.tags.split(',').map((t: string) => t.trim()).filter(Boolean);
+						}
+					}
+				} catch (e) {}
 
 				// Add filter for click events
 				const clickEvents = ['urlClicked', 'urlClickedUnique', 'urlClickedUtm'];
@@ -456,11 +766,7 @@ export class JmpyTrigger implements INodeType {
 						}
 					}
 
-					throw new NodeApiError(this.getNode(), { message: errorMessage } as any, {
-						message: errorMessage,
-						description: errorDescription,
-						httpCode: String(statusCode),
-					});
+					throw new NodeOperationError(this.getNode(), errorMessage);
 				}
 
 				const successBody = response.body || response;
@@ -510,20 +816,6 @@ export class JmpyTrigger implements INodeType {
 			if (payload.source === 'QR_CODE_GENERATOR') {
 				return { workflowData: [] };
 			}
-			return {
-				workflowData: [
-					this.helpers.returnJsonArray([formatUrlCreatedPayload(payload)]),
-				],
-			};
-		}
-
-		// QR created
-		if (event === 'qrCreated') {
-			return {
-				workflowData: [
-					this.helpers.returnJsonArray([formatQrCreatedPayload(payload)]),
-				],
-			};
 		}
 
 		// Click/scan filter by short_code or qr_code_id
@@ -587,36 +879,35 @@ export class JmpyTrigger implements INodeType {
 			}
 		}
 
-
-
 		// Format based on event type
-		if (clickEvents.includes(event)) {
+		let returnItem: any;
+		if (event === 'urlCreated') {
+			returnItem = formatUrlCreatedPayload(payload);
+		} else if (event === 'qrCreated') {
+			returnItem = formatQrCreatedPayload(payload);
+		} else if (clickEvents.includes(event)) {
 			if (event === 'urlClickedUtm') {
-				return {
-					workflowData: [
-						this.helpers.returnJsonArray([formatClickUtmPayload(payload)]),
-					],
-				};
+				returnItem = formatClickUtmPayload(payload);
+			} else {
+				returnItem = formatClickPayload(payload, event.includes('Unique'));
 			}
-			return {
-				workflowData: [
-					this.helpers.returnJsonArray([formatClickPayload(payload, event.includes('Unique'))]),
-				],
-			};
+		} else if (scanEvents.includes(event)) {
+			returnItem = formatScanPayload(payload, event.includes('Unique'));
+		} else {
+			returnItem = payload;
 		}
 
-		if (scanEvents.includes(event)) {
-			return {
-				workflowData: [
-					this.helpers.returnJsonArray([formatScanPayload(payload, event.includes('Unique'))]),
-				],
-			};
+		// Merge envelope metadata fields if present
+		if (bodyData.event_id) {
+			returnItem.event_id = bodyData.event_id;
+			returnItem.event_type = bodyData.event;
+			returnItem.webhook_subscription_id = bodyData.subscription_id;
+			returnItem.webhook_timestamp = bodyData.timestamp;
 		}
 
-		// Fallback: return raw payload
 		return {
 			workflowData: [
-				this.helpers.returnJsonArray([payload]),
+				this.helpers.returnJsonArray([returnItem]),
 			],
 		};
 	}
@@ -668,13 +959,9 @@ function cleanResponseData(obj: any): any {
 		}
 	}
 
-	const rootDlUrl = obj.downloadUrl || obj.download_url || obj.qr_code_url || obj.qrCodeUrl;
+	const rootDlUrl = obj.downloadUrl || obj.download_url || obj.qrCodeUrl;
 	if (rootDlUrl && typeof rootDlUrl === 'string' && rootDlUrl.startsWith('http')) {
 		obj.qr_code_url = rootDlUrl;
-	}
-
-	if (!obj.qr_code_url && obj.short_url && typeof obj.short_url === 'string') {
-		obj.qr_code_url = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(obj.short_url)}`;
 	}
 
 	if (obj.qr_code_url && typeof obj.qr_code_url === 'string') {
@@ -700,6 +987,8 @@ function cleanResponseData(obj: any): any {
 	];
 	if (isSafe) {
 		keysToDelete.push('safety_status', 'safetyStatus', 'safety_reason', 'safetyReason', 'safety_report', 'safetyReport');
+	} else {
+		keysToDelete.push('safety_reason', 'safetyReason', 'safety_report', 'safetyReport');
 	}
 	keysToDelete.forEach(k => {
 		delete obj[k];
@@ -726,12 +1015,13 @@ function cleanResponseData(obj: any): any {
 
 	const branding = obj.link_branding || obj.url_type;
 	if (branding !== undefined) {
-		if (branding === 'branded' || branding === 'subdomain') {
-			obj.branded = 'yes';
-		} else {
-			obj.branded = 'no';
-		}
+		obj.link_branding = branding;
+		obj.branded = (branding === 'branded' || branding === 'subdomain') ? 'yes' : 'no';
+	} else if (obj.domain) {
+		obj.link_branding = obj.domain === 'jmpy.me' ? 'standard' : 'branded';
+		obj.branded = obj.domain === 'jmpy.me' ? 'no' : 'yes';
 	} else {
+		obj.link_branding = 'standard';
 		obj.branded = 'no';
 	}
 
@@ -781,18 +1071,14 @@ function formatUrlCreatedPayload(data: any) {
 		is_dynamic: cleaned.is_dynamic ?? false,
 		tracking_enabled: cleaned.tracking_enabled ?? true,
 		created_at: cleaned.created_at || new Date().toISOString(),
-		source: cleaned.source || '',
-		qr_code_url: cleaned.qr_code_url || '',
-		qr_code_html: cleaned.qr_code_html || '',
-		qr_code_excel_sheet_formula: cleaned.qr_code_excel_sheet_formula || '',
-		qr_code_excel_sheet_formula_IMAGE: cleaned.qr_code_excel_sheet_formula_IMAGE || '',
+		channel: cleaned.channel || 'n8n',
 		short_code_id: cleaned.short_code_id || cleaned.id || '',
 		utm_source: cleaned.utm_source || null,
 		utm_medium: cleaned.utm_medium || null,
 		utm_campaign: cleaned.utm_campaign || null,
 		utm_term: cleaned.utm_term || null,
 		utm_content: cleaned.utm_content || null,
-		branded: cleaned.branded || 'no',
+		link_branding: cleaned.link_branding || cleaned.branded || 'no',
 		subdomain: cleaned.subdomain || null,
 		branded_domain: cleaned.branded_domain || null,
 		custom_alias: cleaned.custom_alias || null,
@@ -800,10 +1086,14 @@ function formatUrlCreatedPayload(data: any) {
 		has_utm_params: cleaned.has_utm_params ?? false,
 	};
 
+	if (cleaned.qr_code_url) {
+		result.qr_code_url = cleaned.qr_code_url;
+		result.qr_code_html = cleaned.qr_code_html || `<img src="${cleaned.qr_code_url}" alt="QR Code" width="200" height="200" />`;
+		result.qr_code_excel_sheet_formula = cleaned.qr_code_excel_sheet_formula || `=IMAGE("${cleaned.qr_code_url}")`;
+	}
+
 	if (cleaned.safety_status && cleaned.safety_status !== 'safe') {
 		result.safety_status = cleaned.safety_status;
-		result.safety_reason = cleaned.safety_reason || '';
-		result.safety_report = cleaned.safety_report || null;
 	}
 	
 	return result;
@@ -814,97 +1104,159 @@ function formatQrCreatedPayload(data: any) {
 }
 
 function formatClickPayload(data: any, includeUnique: boolean = false) {
+	const isQr = data.is_qr_scan === true || data.is_qr_scan === 'true' || !!data.scan_id || data.interaction_type === 'qr_scan';
+	const rawId = data.click_id || data.scan_id || data.interaction_id || data.id || '';
+
+	const geo = data.geo || {};
+	const device = data.device || {};
+	const traffic = data.traffic || {};
+	const utm = data.utm || {};
+
+	const branding = data.link_branding || data.url_type || data.urlType || 'standard';
+	const branded_domain = branding === 'branded' ? (data.branded_domain || data.brandedDomain || null) : null;
+	const subdomain = branding === 'subdomain' ? (data.subdomain || null) : null;
+
 	const result: any = {
-		click_id: data.click_id || data.id || '',
-		short_id: data.short_id || data.short_url_id || data.short_code_id || data.link_id || '',
+		click_id: isQr ? null : rawId,
+		clicked_at: data.clicked_at || data.scanned_at || new Date().toISOString(),
+		interaction_click: isQr ? null : 'Click',
+		interaction_scan: isQr ? 'Scan' : null,
+		interaction_type: isQr ? 'qr_scan' : 'click',
 		short_code: data.short_code || '',
 		short_url: data.short_url || (data.branded_domain ? `https://${data.branded_domain}/${data.custom_alias || data.short_code}` : (data.subdomain ? `https://${data.subdomain}.jmpy.me/${data.custom_alias || data.short_code}` : (data.short_code ? `https://jmpy.me/${data.short_code}` : ''))),
 		destination_url: data.original_url || data.destination_url || '',
-		ip_address: data.ip_address || '',
-		clicked_at: data.clicked_at || new Date().toISOString(),
+		link_branding: branding,
+		branded_domain,
+		subdomain,
+		is_dynamic: data.is_dynamic ?? data.isDynamic ?? false,
+		is_password_protected: data.is_password_protected ?? data.isPasswordProtected ?? false,
+		expires_at: data.expires_at || data.expiresAt || null,
+		tags: data.tags || [],
+		campaign_id: data.campaign_id || data.campaignId || null,
+		campaign_name: data.campaign_name || data.campaignName || null,
+
+		geo__country: geo.country || data.country || '',
+		geo__country_code: geo.country_code || data.country_code || '',
+		geo__region: geo.region || data.region || '',
+		geo__city: geo.city || data.city || '',
+		geo__timezone: geo.timezone || data.timezone || '',
+
+		device__device_type: device.device_type || data.device_type || '',
+		device__device_brand: device.device_brand || data.device_brand || '',
+		device__device_model: device.device_model || data.device_model || '',
+		device__browser: device.browser || data.browser || '',
+		device__browser_version: device.browser_version || data.browser_version || '',
+		device__os: device.os || data.os || '',
+		device__os_version: device.os_version || data.os_version || '',
+		device__os_platform: device.os_platform || data.os_platform || '',
+
+		traffic__traffic_source: traffic.traffic_source || data.traffic_source || '',
+		traffic__traffic_medium: traffic.traffic_medium || data.traffic_medium || '',
+		traffic__organic_vs_paid: traffic.organic_vs_paid || data.organic_vs_paid || '',
+		traffic__referer: traffic.referer || data.referer || data.referrer || data.referrer_url || '',
+		traffic__referrer_domain: traffic.referrer_domain || data.referrer_domain || '',
+
+		utm__utm_source: utm.utm_source || data.utm_source || '',
+		utm__utm_medium: utm.utm_medium || data.utm_medium || '',
+		utm__utm_campaign: utm.utm_campaign || data.utm_campaign || '',
+		utm__utm_term: utm.utm_term || data.utm_term || '',
+		utm__utm_content: utm.utm_content || data.utm_content || ''
 	};
 
 	if (includeUnique) {
 		result.is_unique = data.is_unique ?? true;
 	}
-
-	result.country = data.country || data.geo?.country || '';
-	result.country_code = data.country_code || data.geo?.country_code || '';
-	result.region = data.region || data.geo?.region || '';
-	result.city = data.city || data.geo?.city || '';
-	result.timezone = data.timezone || data.geo?.timezone || '';
-
-	result.device_type = data.device_type || data.device?.device_type || '';
-	result.device_brand = data.device_brand || data.device?.device_brand || '';
-	result.device_model = data.device_model || data.device?.device_model || '';
-	result.browser = data.browser || data.device?.browser || '';
-	result.browser_version = data.browser_version || data.device?.browser_version || '';
-	result.os = data.os || data.device?.os || '';
-	result.os_version = data.os_version || data.device?.os_version || '';
-
-	result.traffic_source = data.traffic_source || data.traffic?.traffic_source || '';
-	result.traffic_medium = data.traffic_medium || data.traffic?.traffic_medium || '';
-	result.referer = data.referrer || data.referer || data.traffic?.referer || '';
-	result.referrer_domain = data.referrer_domain || data.traffic?.referrer_domain || '';
-
-	result.utm_source = data.utm_source || data.utm?.utm_source || '';
-	result.utm_medium = data.utm_medium || data.utm?.utm_medium || '';
-	result.utm_campaign = data.utm_campaign || data.utm?.utm_campaign || '';
-	result.utm_term = data.utm_term || data.utm?.utm_term || '';
-	result.utm_content = data.utm_content || data.utm?.utm_content || '';
 
 	return result;
 }
 
 function formatClickUtmPayload(data: any) {
+	const isQr = data.is_qr_scan === true || data.is_qr_scan === 'true' || !!data.scan_id || data.interaction_type === 'qr_scan';
+	const rawId = data.click_id || data.scan_id || data.interaction_id || data.id || '';
+
+	const branding = data.link_branding || data.url_type || data.urlType || 'standard';
+	const branded_domain = branding === 'branded' ? (data.branded_domain || data.brandedDomain || null) : null;
+	const subdomain = branding === 'subdomain' ? (data.subdomain || null) : null;
+
 	return {
-		click_id: data.click_id || data.id || '',
-		short_id: data.short_id || data.short_url_id || data.short_code_id || data.link_id || '',
+		click_id: isQr ? null : rawId,
 		clicked_at: data.clicked_at || new Date().toISOString(),
-		destination_url: data.original_url || data.destination_url || '',
+		interaction_click: isQr ? null : 'Click',
+		interaction_scan: isQr ? 'Scan' : null,
+		interaction_type: isQr ? 'qr_scan' : 'click',
 		short_code: data.short_code || '',
 		short_url: data.short_url || (data.branded_domain ? `https://${data.branded_domain}/${data.custom_alias || data.short_code}` : (data.subdomain ? `https://${data.subdomain}.jmpy.me/${data.custom_alias || data.short_code}` : (data.short_code ? `https://jmpy.me/${data.short_code}` : ''))),
+		destination_url: data.original_url || data.destination_url || '',
+		link_branding: branding,
+		branded_domain,
+		subdomain,
 		utm_source: data.utm?.utm_source || data.utm_source || null,
 		utm_medium: data.utm?.utm_medium || data.utm_medium || null,
 		utm_campaign: data.utm?.utm_campaign || data.utm_campaign || null,
 		utm_term: data.utm?.utm_term || data.utm_term || null,
 		utm_content: data.utm?.utm_content || data.utm_content || null,
+		campaign_id: data.campaign_id || data.campaignId || '',
+		campaign_name: data.campaign_name || data.campaignName || '',
 	};
 }
 
 function formatScanPayload(data: any, includeUnique: boolean = false) {
+	const geo = data.geo || {};
+	const device = data.device || {};
+	const traffic = data.traffic || {};
+
+	const branding = data.qr_code_link_branding || data.url_type || data.urlType || 'standard';
+	const branded_domain = branding === 'branded' ? (data.branded_domain || data.brandedDomain || null) : null;
+	const subdomain = branding === 'subdomain' ? (data.subdomain || null) : null;
+
 	const result: any = {
+		scan_id: data.scan_id || data.id || '',
+		scanned_at: data.scanned_at || new Date().toISOString(),
 		qr_code_id: data.qr_code_id || '',
-		id: data.scan_id || data.id || '',
 		qr_code_name: data.qr_code_name || '',
 		content_type: data.content_type || 'url',
 		qr_content: data.qr_content || '',
-		ip_address: data.ip_address || '',
-		scanned_at: data.scanned_at || new Date().toISOString(),
+		interaction_click: null,
+		interaction_scan: 'Scan',
+		interaction_type: 'qr_scan',
+		short_code: data.short_code || '',
+		short_url: data.short_url || '',
+		destination_url: data.original_url || data.destination_url || '',
+		link_branding: branding,
+		branded_domain,
+		subdomain,
+		is_dynamic: data.is_dynamic ?? data.isDynamic ?? false,
+		is_password_protected: data.is_password_protected ?? data.isPasswordProtected ?? false,
+		expires_at: data.expires_at || data.expiresAt || null,
+		tags: data.tags || [],
+		campaign_id: data.campaign_id || data.campaignId || null,
+		campaign_name: data.campaign_name || data.campaignName || null,
+
+		geo__country: geo.country || data.country || '',
+		geo__country_code: geo.country_code || data.country_code || '',
+		geo__region: geo.region || data.region || '',
+		geo__city: geo.city || data.city || '',
+		geo__timezone: geo.timezone || data.timezone || '',
+
+		device__device_type: device.device_type || data.device_type || '',
+		device__device_brand: device.device_brand || data.device_brand || '',
+		device__device_model: device.device_model || data.device_model || '',
+		device__browser: device.browser || data.browser || '',
+		device__browser_version: device.browser_version || data.browser_version || '',
+		device__os: device.os || data.os || '',
+		device__os_version: device.os_version || data.os_version || '',
+		device__os_platform: device.os_platform || data.os_platform || '',
+
+		traffic__traffic_source: traffic.traffic_source || data.traffic_source || '',
+		traffic__traffic_medium: traffic.traffic_medium || data.traffic_medium || '',
+		traffic__organic_vs_paid: traffic.organic_vs_paid || data.organic_vs_paid || '',
+		traffic__referer: traffic.referer || data.referer || data.referrer || data.referrer_url || '',
+		traffic__referrer_domain: traffic.referrer_domain || data.referrer_domain || ''
 	};
 
 	if (includeUnique) {
 		result.is_unique = data.is_unique ?? true;
 	}
-
-	result.country = data.country || data.geo?.country || '';
-	result.country_code = data.country_code || data.geo?.country_code || '';
-	result.region = data.region || data.geo?.region || '';
-	result.city = data.city || data.geo?.city || '';
-	result.timezone = data.timezone || data.geo?.timezone || '';
-
-	result.device_type = data.device_type || data.device?.device_type || '';
-	result.device_brand = data.device_brand || data.device?.device_brand || '';
-	result.device_model = data.device_model || data.device?.device_model || '';
-	result.browser = data.browser || data.device?.browser || '';
-	result.browser_version = data.browser_version || data.device?.browser_version || '';
-	result.os = data.os || data.device?.os || '';
-	result.os_version = data.os_version || data.device?.os_version || '';
-
-	result.traffic_source = data.traffic_source || data.traffic?.traffic_source || '';
-	result.traffic_medium = data.traffic_medium || data.traffic?.traffic_medium || '';
-	result.referer = data.referrer || data.referer || data.traffic?.referer || '';
-	result.referrer_domain = data.referrer_domain || data.traffic?.referrer_domain || '';
 
 	return result;
 }

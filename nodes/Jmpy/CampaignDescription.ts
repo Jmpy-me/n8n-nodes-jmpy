@@ -60,20 +60,6 @@ export const campaignFields: INodeProperties[] = [
 		placeholder: 'Links for Black Friday promotions',
 		description: 'Campaign description for organization',
 	},
-	{
-		displayName: 'Tags',
-		name: 'tags',
-		type: 'string',
-		displayOptions: {
-			show: {
-				resource: ['campaign'],
-				operation: ['create'],
-			},
-		},
-		default: '',
-		placeholder: 'promo, marketing',
-		description: 'Tags for organizing and filtering campaigns (comma-separated)',
-	},
 
 	// ----- Campaign: Delete -----
 	{
