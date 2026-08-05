@@ -19,7 +19,8 @@ function parseMcpResponse(response: any): any {
 			try {
 				const parsed = JSON.parse(textBlock.text);
 				return parsed.data || parsed;
-			} catch (e) {
+			} catch (error) {
+				void error;
 				return { text: textBlock.text };
 			}
 		}
@@ -154,7 +155,8 @@ function cleanResponseData(obj: any): any {
 				obj.utm_campaign = parsedUrl.searchParams.get('utm_campaign') || null;
 				obj.utm_term = parsedUrl.searchParams.get('utm_term') || null;
 				obj.utm_content = parsedUrl.searchParams.get('utm_content') || null;
-			} catch (e) {
+			} catch (error) {
+				void error;
 				obj.utm_source = null;
 				obj.utm_medium = null;
 				obj.utm_campaign = null;
@@ -755,34 +757,19 @@ export class JmpyPollingTrigger implements INodeType {
 		const webhookData = this.getWorkflowStaticData('node');
 
 		let campaignIds: string[] = [];
-		try {
-			const rawCampaignIds = this.getNodeParameter('campaignId') as any;
+		const rawCampaignIds = this.getNodeParameter('campaignId', undefined) as any;
+		if (rawCampaignIds) {
 			if (typeof rawCampaignIds === 'string') {
 				campaignIds = rawCampaignIds.split(',').map((c: string) => c.trim()).filter(Boolean);
 			} else if (Array.isArray(rawCampaignIds)) {
 				campaignIds = rawCampaignIds.flatMap((c: any) => typeof c === 'string' ? c.split(',').map((x: string) => x.trim()) : [c]).map((c: any) => String(c)).filter(Boolean);
 			}
-		} catch (e) {}
+		}
 
-		let urlType: string[] = [];
-		try {
-			urlType = this.getNodeParameter('url_type') as string[];
-		} catch (e) {}
-
-		let brandedDomain: string[] = [];
-		try {
-			brandedDomain = this.getNodeParameter('branded_domain') as string[];
-		} catch (e) {}
-
-		let subdomain: string[] = [];
-		try {
-			subdomain = this.getNodeParameter('subdomain') as string[];
-		} catch (e) {}
-
-		let filtersObj: any = {};
-		try {
-			filtersObj = this.getNodeParameter('filters') as any;
-		} catch (e) {}
+		const urlType = this.getNodeParameter('url_type', []) as string[];
+		const brandedDomain = this.getNodeParameter('branded_domain', []) as string[];
+		const subdomain = this.getNodeParameter('subdomain', []) as string[];
+		const filtersObj = this.getNodeParameter('filters', {}) as any;
 
 		// Get the last processed timestamp
 		const lastTimeChecked = webhookData.lastTimeChecked as string;
@@ -790,7 +777,10 @@ export class JmpyPollingTrigger implements INodeType {
 		let isManualMode = false;
 		try {
 			isManualMode = this.getMode() === 'manual';
-		} catch (e) {}
+		} catch (error) {
+			void error;
+			isManualMode = false;
+		}
 
 		const makeApiRequest = async (url: string, body: any) => {
 			try {
@@ -814,7 +804,8 @@ export class JmpyPollingTrigger implements INodeType {
 						try {
 							const parsed = JSON.parse(responseBody);
 							errorMessage = parsed.error || parsed.detail || parsed.message || errorMessage;
-						} catch (e) {
+						} catch (error) {
+							void error;
 							errorMessage = responseBody || errorMessage;
 						}
 					}
@@ -1063,21 +1054,17 @@ export class JmpyPollingTrigger implements INodeType {
 
 		if (event === 'newLinkClick' || event === 'newLinkClickUnique' || event === 'newLinkClickUtm') {
 			let shortCodes: string[] = [];
-			try {
-				const mode = this.getNodeParameter('shortCodeSelectionMode', '') as string;
-				if (mode === 'list') {
-					const listCodes = this.getNodeParameter('shortCodes', []) as string[];
-					if (listCodes && listCodes.length > 0) {
-						shortCodes = listCodes;
-					}
-				} else {
-					const customStr = this.getNodeParameter('customShortCodes', '') as string;
-					if (customStr) {
-						shortCodes = customStr.split(',').map(s => s.trim()).filter(Boolean);
-					}
+			const mode = this.getNodeParameter('shortCodeSelectionMode', '') as string;
+			if (mode === 'list') {
+				const listCodes = this.getNodeParameter('shortCodes', []) as string[];
+				if (listCodes && listCodes.length > 0) {
+					shortCodes = listCodes;
 				}
-			} catch (e) {
-				// Fallback
+			} else {
+				const customStr = this.getNodeParameter('customShortCodes', '') as string;
+				if (customStr) {
+					shortCodes = customStr.split(',').map(s => s.trim()).filter(Boolean);
+				}
 			}
 
 			const clickFilters: any = {
@@ -1279,21 +1266,17 @@ export class JmpyPollingTrigger implements INodeType {
 
 		if (event === 'newQrCodeScan' || event === 'newQrCodeScanUnique') {
 			let qrCodeIds: string[] = [];
-			try {
-				const mode = this.getNodeParameter('qrCodeSelectionMode', '') as string;
-				if (mode === 'list') {
-					const listIds = this.getNodeParameter('qrCodeIds', []) as string[];
-					if (listIds && listIds.length > 0) {
-						qrCodeIds = listIds;
-					}
-				} else {
-					const customStr = this.getNodeParameter('customQrCodeIds', '') as string;
-					if (customStr) {
-						qrCodeIds = customStr.split(',').map(s => s.trim()).filter(Boolean);
-					}
+			const mode = this.getNodeParameter('qrCodeSelectionMode', '') as string;
+			if (mode === 'list') {
+				const listIds = this.getNodeParameter('qrCodeIds', []) as string[];
+				if (listIds && listIds.length > 0) {
+					qrCodeIds = listIds;
 				}
-			} catch (e) {
-				// Fallback
+			} else {
+				const customStr = this.getNodeParameter('customQrCodeIds', '') as string;
+				if (customStr) {
+					qrCodeIds = customStr.split(',').map(s => s.trim()).filter(Boolean);
+				}
 			}
 
 			let responseData;

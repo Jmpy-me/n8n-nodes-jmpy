@@ -22,7 +22,8 @@ function parseMcpResponse(response: any): any {
 			try {
 				const parsed = JSON.parse(textBlock.text);
 				return parsed.data || parsed;
-			} catch (e) {
+			} catch (error) {
+				void error;
 				return { text: textBlock.text };
 			}
 		}
@@ -190,7 +191,8 @@ function cleanResponseData(obj: any): any {
 				obj.utm_campaign = obj.utm_campaign || parsedUrl.searchParams.get('utm_campaign') || null;
 				obj.utm_term = obj.utm_term || parsedUrl.searchParams.get('utm_term') || null;
 				obj.utm_content = obj.utm_content || parsedUrl.searchParams.get('utm_content') || null;
-			} catch (e) {
+			} catch (error) {
+				void error;
 				obj.utm_source = obj.utm_source || null;
 				obj.utm_medium = obj.utm_medium || null;
 				obj.utm_campaign = obj.utm_campaign || null;
@@ -484,7 +486,8 @@ export class Jmpy implements INodeType {
 								if (pathSegments.length > 0) {
 									shortCode = pathSegments[pathSegments.length - 1];
 								}
-							} catch (e) {
+							} catch (error) {
+								void error;
 								const segments = shortUrlVal.split('/').filter(Boolean);
 								if (segments.length > 0) {
 									shortCode = segments[segments.length - 1];
@@ -507,7 +510,8 @@ export class Jmpy implements INodeType {
 								if (pathSegments.length > 0) {
 									shortCode = pathSegments[pathSegments.length - 1];
 								}
-							} catch (e) {
+							} catch (error) {
+								void error;
 								const segments = shortUrlIdVal.split('/').filter(Boolean);
 								if (segments.length > 0) {
 									shortCode = segments[segments.length - 1];
@@ -534,7 +538,8 @@ export class Jmpy implements INodeType {
 								if (pathSegments.length > 0) {
 									shortCode = pathSegments[pathSegments.length - 1];
 								}
-							} catch (e) {
+							} catch (error) {
+								void error;
 								const segments = shortUrlIdVal.split('/').filter(Boolean);
 								if (segments.length > 0) {
 									shortCode = segments[segments.length - 1];
@@ -619,7 +624,8 @@ export class Jmpy implements INodeType {
 							}
 							try {
 								new URL(qrUrl);
-							} catch (e) {
+							} catch (error) {
+								void error;
 								throw new Error('Please enter a valid URL (e.g., https://example.com).');
 							}
 							contentData = { url: qrUrl };
@@ -764,25 +770,17 @@ export class Jmpy implements INodeType {
 							trackingEnabled: this.getNodeParameter('trackingEnabled', i) as boolean,
 						};
 
-						try {
-							const campaignId = this.getNodeParameter('campaignId', i) as string;
-							if (campaignId) body.campaign_id = campaignId;
-						} catch (e) {}
+						const campaignId = this.getNodeParameter('campaignId', i, '') as string;
+						if (campaignId) body.campaign_id = campaignId;
 
-						try {
-							const urlType = this.getNodeParameter('urlType', i) as string;
-							if (urlType) body.url_type = urlType;
-						} catch (e) {}
+						const urlType = this.getNodeParameter('urlType', i, '') as string;
+						if (urlType) body.url_type = urlType;
 
-						try {
-							const brandedDomain = this.getNodeParameter('brandedDomain', i) as string;
-							if (brandedDomain) body.branded_domain = brandedDomain;
-						} catch (e) {}
+						const brandedDomain = this.getNodeParameter('brandedDomain', i, '') as string;
+						if (brandedDomain) body.branded_domain = brandedDomain;
 
-						try {
-							const subdomain = this.getNodeParameter('subdomain', i) as string;
-							if (subdomain) body.subdomain = subdomain;
-						} catch (e) {}
+						const subdomain = this.getNodeParameter('subdomain', i, '') as string;
+						if (subdomain) body.subdomain = subdomain;
 
 						const validateUtmNoSpaces = (paramLabel: string, val: string) => {
 							if (val && /\s/.test(val)) {
@@ -1010,7 +1008,8 @@ export class Jmpy implements INodeType {
 					try {
 						const parsed = JSON.parse(responseData);
 						apiErrorMessage = parsed.detail || parsed.error || parsed.message;
-					} catch (e) {
+					} catch (error) {
+						void error;
 						apiErrorMessage = responseData;
 					}
 				}

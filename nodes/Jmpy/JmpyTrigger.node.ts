@@ -20,7 +20,8 @@ function parseMcpResponse(response: any): any {
 			try {
 				const parsed = JSON.parse(textBlock.text);
 				return parsed.data || parsed;
-			} catch (e) {
+			} catch (error) {
+				void error;
 				return { text: textBlock.text };
 			}
 		}
@@ -612,7 +613,8 @@ export class JmpyTrigger implements INodeType {
 						}
 						webhookUrl = webhookUrl.replace(/^https?:\/\/[^/]+/, tunnelUrl);
 					}
-				} catch (e) {
+				} catch (error) {
+					void error;
 					// Ignore if parameter is not present
 				}
 
@@ -636,93 +638,75 @@ export class JmpyTrigger implements INodeType {
 					filters: {},
 				};
 
-				try {
-					const campaignId = this.getNodeParameter('campaignId') as string;
-					if (campaignId) {
-						body.filters.campaign_id = campaignId;
-					}
-				} catch (e) {}
+				const campaignId = this.getNodeParameter('campaignId', '') as string;
+				if (campaignId) {
+					body.filters.campaign_id = campaignId;
+				}
 
-				try {
-					const urlType = (this.getNodeParameter('url_type') as string[] || []).filter(Boolean);
-					if (urlType && urlType.length > 0) {
-						body.filters.url_type = urlType;
-					}
-				} catch (e) {}
+				const urlType = (this.getNodeParameter('url_type', []) as string[] || []).filter(Boolean);
+				if (urlType && urlType.length > 0) {
+					body.filters.url_type = urlType;
+				}
 
-				try {
-					const brandedDomain = (this.getNodeParameter('branded_domain') as string[] || []).filter(Boolean);
-					if (brandedDomain && brandedDomain.length > 0) {
-						body.filters.branded_domain = brandedDomain;
-					}
-				} catch (e) {}
+				const brandedDomain = (this.getNodeParameter('branded_domain', []) as string[] || []).filter(Boolean);
+				if (brandedDomain && brandedDomain.length > 0) {
+					body.filters.branded_domain = brandedDomain;
+				}
 
-				try {
-					const subdomain = (this.getNodeParameter('subdomain') as string[] || []).filter(Boolean);
-					if (subdomain && subdomain.length > 0) {
-						body.filters.subdomain = subdomain;
-					}
-				} catch (e) {}
+				const subdomain = (this.getNodeParameter('subdomain', []) as string[] || []).filter(Boolean);
+				if (subdomain && subdomain.length > 0) {
+					body.filters.subdomain = subdomain;
+				}
 
-				try {
-					const filterValues = this.getNodeParameter('filters') as any;
-					if (filterValues) {
-						if (filterValues.is_dynamic !== undefined) body.filters.is_dynamic = filterValues.is_dynamic;
-						if (filterValues.is_password_protected !== undefined) body.filters.is_password_protected = filterValues.is_password_protected;
-						if (filterValues.has_utm_params !== undefined) body.filters.has_utm_params = filterValues.has_utm_params;
-						if (filterValues.is_expiring !== undefined) body.filters.is_expiring = filterValues.is_expiring;
-						if (filterValues.custom_alias !== undefined) body.filters.custom_alias = filterValues.custom_alias;
-						if (filterValues.tags) {
-							body.filters.tags = filterValues.tags.split(',').map((t: string) => t.trim()).filter(Boolean);
-						}
+				const filterValues = this.getNodeParameter('filters', undefined) as any;
+				if (filterValues) {
+					if (filterValues.is_dynamic !== undefined) body.filters.is_dynamic = filterValues.is_dynamic;
+					if (filterValues.is_password_protected !== undefined) body.filters.is_password_protected = filterValues.is_password_protected;
+					if (filterValues.has_utm_params !== undefined) body.filters.has_utm_params = filterValues.has_utm_params;
+					if (filterValues.is_expiring !== undefined) body.filters.is_expiring = filterValues.is_expiring;
+					if (filterValues.custom_alias !== undefined) body.filters.custom_alias = filterValues.custom_alias;
+					if (filterValues.tags) {
+						body.filters.tags = filterValues.tags.split(',').map((t: string) => t.trim()).filter(Boolean);
 					}
-				} catch (e) {}
+				}
 
 				// Add filter for click events
 				const clickEvents = ['urlClicked', 'urlClickedUnique', 'urlClickedUtm'];
 				if (clickEvents.includes(event)) {
-					try {
-						const mode = this.getNodeParameter('shortCodeSelectionMode') as string;
-						if (mode === 'list') {
-							const shortCodes = this.getNodeParameter('shortCodes') as string[];
-							if (shortCodes && shortCodes.length > 0) {
-								body.short_code = shortCodes.join(',');
-							}
-						} else {
-							const custom = this.getNodeParameter('customShortCodes') as string;
-							if (custom) {
-								const parsed = custom.split(',').map(s => s.trim()).filter(Boolean);
-								if (parsed.length > 0) {
-									body.short_code = parsed.join(',');
-								}
+					const mode = this.getNodeParameter('shortCodeSelectionMode', '') as string;
+					if (mode === 'list') {
+						const shortCodes = this.getNodeParameter('shortCodes', []) as string[];
+						if (shortCodes && shortCodes.length > 0) {
+							body.short_code = shortCodes.join(',');
+						}
+					} else if (mode) {
+						const custom = this.getNodeParameter('customShortCodes', '') as string;
+						if (custom) {
+							const parsed = custom.split(',').map(s => s.trim()).filter(Boolean);
+							if (parsed.length > 0) {
+								body.short_code = parsed.join(',');
 							}
 						}
-					} catch (e) {
-						// Parameter not set, monitor all
 					}
 				}
 
 				// Add filter for scan events
 				const scanEvents = ['qrScanned', 'qrScannedUnique'];
 				if (scanEvents.includes(event)) {
-					try {
-						const mode = this.getNodeParameter('qrCodeSelectionMode') as string;
-						if (mode === 'list') {
-							const qrCodeIds = this.getNodeParameter('qrCodeIds') as string[];
-							if (qrCodeIds && qrCodeIds.length > 0) {
-								body.qr_code_id = qrCodeIds.join(',');
-							}
-						} else {
-							const custom = this.getNodeParameter('customQrCodeIds') as string;
-							if (custom) {
-								const parsed = custom.split(',').map(s => s.trim()).filter(Boolean);
-								if (parsed.length > 0) {
-									body.qr_code_id = parsed.join(',');
-								}
+					const mode = this.getNodeParameter('qrCodeSelectionMode', '') as string;
+					if (mode === 'list') {
+						const qrCodes = this.getNodeParameter('qrCodeIds', []) as string[];
+						if (qrCodes && qrCodes.length > 0) {
+							body.qr_code_id = qrCodes.join(',');
+						}
+					} else if (mode) {
+						const custom = this.getNodeParameter('customQrCodeIds', '') as string;
+						if (custom) {
+							const parsed = custom.split(',').map(s => s.trim()).filter(Boolean);
+							if (parsed.length > 0) {
+								body.qr_code_id = parsed.join(',');
 							}
 						}
-					} catch (e) {
-						// Parameter not set, monitor all
 					}
 				}
 
@@ -749,19 +733,17 @@ export class JmpyTrigger implements INodeType {
 				if (statusCode >= 400) {
 					const responseBody = response.body || response;
 					let errorMessage = 'Failed to create webhook subscription';
-					let errorDescription = '';
 
 					// Extract custom error message from API response body
 					if (responseBody && typeof responseBody === 'object') {
 						// API returns { error: "message", detail: "message", message: "message" }
 						errorMessage = responseBody.detail || responseBody.error || responseBody.message || errorMessage;
-						errorDescription = responseBody.suggestion || responseBody.hint || errorMessage;
 					} else if (typeof responseBody === 'string') {
 						try {
 							const parsed = JSON.parse(responseBody);
 							errorMessage = parsed.detail || parsed.error || parsed.message || errorMessage;
-							errorDescription = parsed.suggestion || parsed.hint || errorMessage;
-						} catch (e) {
+						} catch (error) {
+							void error;
 							errorMessage = responseBody || errorMessage;
 						}
 					}
@@ -792,7 +774,8 @@ export class JmpyTrigger implements INodeType {
 							url: `${API_BASE_URL}/api/v1/webhooks/subscriptions/${webhookId}`,
 							json: true,
 						});
-					} catch (e) {
+					} catch (error) {
+						void error;
 						// Subscription may already be deleted
 					}
 					delete webhookData.webhookId;
@@ -819,46 +802,35 @@ export class JmpyTrigger implements INodeType {
 		}
 
 		// Click/scan filter by short_code or qr_code_id
-		const clickEvents = ['urlClicked', 'urlClickedUnique', 'urlClickedUtm'];
-		const scanEvents = ['qrScanned', 'qrScannedUnique'];
-
-		if (clickEvents.includes(event)) {
-			try {
-				const mode = this.getNodeParameter('shortCodeSelectionMode') as string;
-				let activeCodes: string[] = [];
-				if (mode === 'list') {
-					activeCodes = this.getNodeParameter('shortCodes') as string[];
-				} else {
-					const custom = this.getNodeParameter('customShortCodes') as string;
-					if (custom) {
-						activeCodes = custom.split(',').map(s => s.trim()).filter(Boolean);
-					}
+		if (event === 'urlClicked' || event === 'urlClickedUnique' || event === 'urlClickedUtm') {
+			const selectionMode = this.getNodeParameter('shortCodeSelectionMode', '') as string;
+			let activeCodes: string[] = [];
+			if (selectionMode === 'list') {
+				activeCodes = this.getNodeParameter('shortCodes', []) as string[];
+			} else if (selectionMode) {
+				const custom = this.getNodeParameter('customShortCodes', '') as string;
+				if (custom) {
+					activeCodes = custom.split(',').map(s => s.trim()).filter(Boolean);
 				}
-				if (activeCodes && activeCodes.length > 0 && !activeCodes.includes(payload.short_code)) {
-					return { workflowData: [] };
-				}
-			} catch (e) {
-				// No filter
+			}
+			if (activeCodes && activeCodes.length > 0 && !activeCodes.includes(payload.short_code)) {
+				return { workflowData: [] };
 			}
 		}
 
-		if (scanEvents.includes(event)) {
-			try {
-				const mode = this.getNodeParameter('qrCodeSelectionMode') as string;
-				let activeIds: string[] = [];
-				if (mode === 'list') {
-					activeIds = this.getNodeParameter('qrCodeIds') as string[];
-				} else {
-					const custom = this.getNodeParameter('customQrCodeIds') as string;
-					if (custom) {
-						activeIds = custom.split(',').map(s => s.trim()).filter(Boolean);
-					}
+		if (event === 'qrCodeScanned' || event === 'qrCodeScannedUnique') {
+			const selectionMode = this.getNodeParameter('qrCodeSelectionMode', '') as string;
+			let activeIds: string[] = [];
+			if (selectionMode === 'list') {
+				activeIds = this.getNodeParameter('qrCodeIds', []) as string[];
+			} else if (selectionMode) {
+				const custom = this.getNodeParameter('customQrCodeIds', '') as string;
+				if (custom) {
+					activeIds = custom.split(',').map(s => s.trim()).filter(Boolean);
 				}
-				if (activeIds && activeIds.length > 0 && !activeIds.includes(payload.qr_code_id)) {
-					return { workflowData: [] };
-				}
-			} catch (e) {
-				// No filter
+			}
+			if (activeIds && activeIds.length > 0 && !activeIds.includes(payload.qr_code_id)) {
+				return { workflowData: [] };
 			}
 		}
 
@@ -885,13 +857,13 @@ export class JmpyTrigger implements INodeType {
 			returnItem = formatUrlCreatedPayload(payload);
 		} else if (event === 'qrCreated') {
 			returnItem = formatQrCreatedPayload(payload);
-		} else if (clickEvents.includes(event)) {
+		} else if (['urlClicked', 'urlClickedUnique', 'urlClickedUtm'].includes(event)) {
 			if (event === 'urlClickedUtm') {
 				returnItem = formatClickUtmPayload(payload);
 			} else {
 				returnItem = formatClickPayload(payload, event.includes('Unique'));
 			}
-		} else if (scanEvents.includes(event)) {
+		} else if (['qrScanned', 'qrScannedUnique'].includes(event)) {
 			returnItem = formatScanPayload(payload, event.includes('Unique'));
 		} else {
 			returnItem = payload;
@@ -1037,7 +1009,8 @@ function cleanResponseData(obj: any): any {
 				obj.utm_campaign = parsedUrl.searchParams.get('utm_campaign') || null;
 				obj.utm_term = parsedUrl.searchParams.get('utm_term') || null;
 				obj.utm_content = parsedUrl.searchParams.get('utm_content') || null;
-			} catch (e) {
+			} catch (error) {
+				void error;
 				obj.utm_source = null;
 				obj.utm_medium = null;
 				obj.utm_campaign = null;
