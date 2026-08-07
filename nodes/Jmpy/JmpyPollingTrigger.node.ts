@@ -4,6 +4,7 @@ import {
 	INodeType,
 	INodeTypeDescription,
 	NodeApiError,
+	NodeConnectionTypes,
 	NodeOperationError,
 	INodePropertyOptions,
 	ILoadOptionsFunctions,
@@ -250,7 +251,7 @@ export class JmpyPollingTrigger implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Jmpy.me Polling Trigger',
 		name: 'jmpyPollingTrigger',
-		icon: 'file:logo.png',
+		icon: { light: 'file:logo.svg', dark: 'file:logo.svg' },
 		group: ['trigger'],
 		version: 1,
 		subtitle: '={{$parameter["event"]}}',
@@ -260,7 +261,7 @@ export class JmpyPollingTrigger implements INodeType {
 		},
 		polling: true,
 		inputs: [],
-		outputs: ['main'],
+		outputs: [NodeConnectionTypes.Main],
 		credentials: [
 			{
 				name: 'jmpyOAuth2Api',
@@ -711,7 +712,7 @@ export class JmpyPollingTrigger implements INodeType {
 					const data = parseMcpResponse(responseData);
 					const items = data.subdomains || [];
 					if (items.length === 0) {
-						return [{ name: 'No subdomain is added yet', value: '' }];
+						return [{ name: 'No Subdomain Is Added Yet', value: '' }];
 					}
 					return items.map((item: any) => ({
 						name: item.subdomain || item.name || item.fullDomain || item.id,
@@ -815,12 +816,12 @@ export class JmpyPollingTrigger implements INodeType {
 
 				return response.body || response;
 			} catch (error: any) {
-				if (error instanceof NodeOperationError) throw error;
+				if (error instanceof NodeOperationError || error instanceof NodeApiError) throw error;
 				const apiErr = error?.error?.error || error?.response?.data?.error || error?.response?.data?.message || error?.message;
 				if (apiErr && typeof apiErr === 'string') {
-					throw new NodeOperationError(this.getNode(), apiErr);
+					throw new NodeApiError(this.getNode(), error as any, { message: apiErr });
 				}
-				throw new NodeApiError(this.getNode(), error);
+				throw new NodeApiError(this.getNode(), error as any);
 			}
 		};
 

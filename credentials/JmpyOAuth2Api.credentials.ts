@@ -8,6 +8,7 @@ export class JmpyOAuth2Api implements ICredentialType {
 	extends = ['oAuth2Api'];
 	displayName = 'Jmpy.me OAuth2 API';
 	documentationUrl = 'https://jmpy.me/docs';
+	icon = { light: 'file:../nodes/Jmpy/logo.svg', dark: 'file:../nodes/Jmpy/logo.svg' } as const;
 	properties: INodeProperties[] = [
 		{
 			displayName: 'Grant Type',
@@ -25,6 +26,9 @@ export class JmpyOAuth2Api implements ICredentialType {
 			displayName: 'Client Secret',
 			name: 'clientSecret',
 			type: 'hidden',
+			typeOptions: {
+				password: true,
+			},
 			default: '',
 		},
 		{

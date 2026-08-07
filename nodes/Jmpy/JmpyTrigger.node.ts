@@ -7,6 +7,7 @@ import {
 	INodePropertyOptions,
 	ILoadOptionsFunctions,
 	NodeApiError,
+	NodeConnectionTypes,
 	NodeOperationError,
 } from 'n8n-workflow';
 
@@ -51,7 +52,7 @@ export class JmpyTrigger implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Jmpy.me Trigger',
 		name: 'jmpyTrigger',
-		icon: 'file:logo.png',
+		icon: { light: 'file:logo.svg', dark: 'file:logo.svg' },
 		group: ['trigger'],
 		version: 1,
 		subtitle: '={{$parameter["event"]}}',
@@ -60,7 +61,7 @@ export class JmpyTrigger implements INodeType {
 			name: 'Jmpy.me Trigger',
 		},
 		inputs: [],
-		outputs: ['main'],
+		outputs: [NodeConnectionTypes.Main],
 		credentials: [
 			{
 				name: 'jmpyOAuth2Api',
@@ -266,26 +267,15 @@ export class JmpyTrigger implements INodeType {
 					},
 				},
 			},
-			...((() => {
-				const webhookUrlEnv = process.env.WEBHOOK_URL || '';
-				const isLocal = !webhookUrlEnv ||
-					webhookUrlEnv.includes('localhost') ||
-					webhookUrlEnv.includes('127.0.0.1') ||
-					webhookUrlEnv.includes('192.168.') ||
-					webhookUrlEnv.includes('10.');
-				if (isLocal) {
-					return [{
-						displayName: 'Webhook Tunnel URL / Host Override',
-						name: 'webhookTunnelUrl',
-						type: 'string' as const,
-						default: '',
-						required: false,
-						placeholder: 'https://xxxx.ngrok-free.dev',
-						description: 'If you access n8n via a tunnel (e.g. ngrok, Cloudflare) and get a localhost error, enter your public tunnel URL here to override the domain.',
-					}];
-				}
-				return [];
-			})()),
+			{
+				displayName: 'Webhook Tunnel URL / Host Override',
+				name: 'webhookTunnelUrl',
+				type: 'string',
+				default: '',
+				required: false,
+				placeholder: 'https://xxxx.ngrok-free.dev',
+				description: 'If you run n8n locally (e.g. via Docker on localhost) and get a localhost error, enter your public tunnel URL here to override the domain. Cloud/production users can ignore this field.',
+			},
 			// Campaign filter
 			{
 				displayName: 'Campaign Name or ID',
@@ -552,7 +542,7 @@ export class JmpyTrigger implements INodeType {
 					const data = parseMcpResponse(responseData);
 					const items = data.subdomains || [];
 					if (items.length === 0) {
-						return [{ name: 'No subdomain is added yet', value: '' }];
+						return [{ name: 'No Subdomain Is Added Yet', value: '' }];
 					}
 					return items.map((item: any) => ({
 						name: item.subdomain || item.name || item.fullDomain || item.id,
@@ -603,7 +593,7 @@ export class JmpyTrigger implements INodeType {
 
 			async create(this: IHookFunctions): Promise<boolean> {
 				let webhookUrl = this.getNodeWebhookUrl('default') as string;
-				
+
 				try {
 					let tunnelUrl = this.getNodeParameter('webhookTunnelUrl', '') as string;
 					if (tunnelUrl) {
@@ -621,7 +611,7 @@ export class JmpyTrigger implements INodeType {
 				if (webhookUrl && (webhookUrl.includes('localhost') || webhookUrl.includes('127.0.0.1'))) {
 					throw new NodeApiError(this.getNode(), { message: 'Invalid Webhook URL' } as any, {
 						message: 'Cannot use localhost for Webhook Triggers',
-						description: 'Jmpy.me cannot send events to a localhost URL. The \'Webhook Tunnel URL / Host Override\' parameter is empty. Please enter your public tunnel URL (e.g., https://your-tunnel.ngrok-free.dev) in the node settings for working on localhost, or use the Polling Triggers instead.',
+						description: 'Jmpy.me cannot send events to a localhost URL. The \'Webhook Tunnel URL (Required for Localhost)\' parameter is empty. Please enter your public tunnel URL (e.g., https://your-tunnel.ngrok-free.dev) in the node settings when running n8n on localhost, or use the Polling Triggers instead.',
 					});
 				}
 
@@ -629,7 +619,7 @@ export class JmpyTrigger implements INodeType {
 				const eventType = EVENT_TYPE_MAP[event];
 
 				if (!eventType) {
-					throw new Error(`Unknown event type: ${event}`);
+					throw new NodeOperationError(this.getNode(), `Unknown event type: ${event}`);
 				}
 
 				const body: any = {
@@ -754,7 +744,7 @@ export class JmpyTrigger implements INodeType {
 				const successBody = response.body || response;
 				const responseData = successBody.data || successBody;
 				if (!responseData || !responseData.id) {
-					throw new Error('Failed to create webhook subscription');
+					throw new NodeOperationError(this.getNode(), 'Failed to create webhook subscription');
 				}
 
 				const webhookData = this.getWorkflowStaticData('node');
@@ -1068,7 +1058,7 @@ function formatUrlCreatedPayload(data: any) {
 	if (cleaned.safety_status && cleaned.safety_status !== 'safe') {
 		result.safety_status = cleaned.safety_status;
 	}
-	
+
 	return result;
 }
 

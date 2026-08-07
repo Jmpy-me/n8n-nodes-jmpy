@@ -5,8 +5,12 @@ Official [n8n](https://n8n.io/) community node for [Jmpy.me](https://jmpy.me) â€
 Unlock the full potential of Jmpy.me in your n8n workflows! This package provides comprehensive modules to integrate powerful branded link management and QR code generation seamlessly.
 
 ## Setup & Authentication
-To use this node, you need to create an OAuth API key from your Jmpy.me account and provide it to n8n.
-Go to `Settings -> API Keys` in Jmpy.me, create an App, and copy the Client ID and Secret to your n8n credentials for the `Jmpy.me OAuth2 API` connection.
+Connecting Jmpy.me to n8n is fast and automatic!
+
+1. When adding a Jmpy.me node or credential in n8n, select **Jmpy.me OAuth2 API**.
+2. Click **Connect my account** (or **Sign in with Jmpy.me**).
+3. A popup window will prompt you to authorize n8n to access your Jmpy.me account.
+4. Click **Authorize**, and your account will automatically be connected securely without needing to copy-paste any API keys!
 
 
 ---

@@ -6,6 +6,7 @@ import {
 	INodeType,
 	INodeTypeDescription,
 	NodeApiError,
+	NodeConnectionTypes,
 	NodeOperationError,
 } from 'n8n-workflow';
 
@@ -298,7 +299,7 @@ export class Jmpy implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Jmpy.me',
 		name: 'jmpy',
-		icon: 'file:logo.png', // We can place a placeholder or icon logo.png
+		icon: { light: 'file:logo.svg', dark: 'file:logo.svg' },
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["resource"] + ": " + $parameter["operation"]}}',
@@ -306,8 +307,9 @@ export class Jmpy implements INodeType {
 		defaults: {
 			name: 'Jmpy.me',
 		},
-		inputs: ['main'],
-		outputs: ['main'],
+		usableAsTool: true,
+		inputs: [NodeConnectionTypes.Main],
+		outputs: [NodeConnectionTypes.Main],
 		credentials: [
 			{
 				name: 'jmpyOAuth2Api',
@@ -365,7 +367,7 @@ export class Jmpy implements INodeType {
 					const data = parseMcpResponse(responseData);
 					const items = data.subdomains || [];
 					if (items.length === 0) {
-						return [{ name: 'No subdomain is added yet', value: '' }];
+						return [{ name: 'No Subdomain Is Added Yet', value: '' }];
 					}
 					return items.map((item: any) => ({
 						name: item.subdomain || item.name || item.fullDomain || item.id,
@@ -617,7 +619,7 @@ export class Jmpy implements INodeType {
 						if (contentType === 'url') {
 							let qrUrl = (this.getNodeParameter('qrUrl', i) as string).trim();
 							if (!qrUrl) {
-								throw new Error('URL is required.');
+								throw new NodeOperationError(this.getNode(), 'URL is required.', { itemIndex: i });
 							}
 							if (!/^https?:\/\//i.test(qrUrl)) {
 								qrUrl = 'https://' + qrUrl;
@@ -626,13 +628,13 @@ export class Jmpy implements INodeType {
 								new URL(qrUrl);
 							} catch (error) {
 								void error;
-								throw new Error('Please enter a valid URL (e.g., https://example.com).');
+								throw new NodeOperationError(this.getNode(), 'Please enter a valid URL (e.g., https://example.com).', { itemIndex: i });
 							}
 							contentData = { url: qrUrl };
 						} else if (contentType === 'text') {
 							const qrText = this.getNodeParameter('qrText', i) as string;
 							if (!qrText) {
-								throw new Error('Text content is required.');
+								throw new NodeOperationError(this.getNode(), 'Text content is required.', { itemIndex: i });
 							}
 							contentData = { text: qrText };
 						} else if (contentType === 'wifi') {
@@ -641,30 +643,30 @@ export class Jmpy implements INodeType {
 							const password = this.getNodeParameter('wifiPassword', i) as string;
 
 							if (!ssid) {
-								throw new Error('WiFi Network Name (SSID) is required.');
+								throw new NodeOperationError(this.getNode(), 'WiFi Network Name (SSID) is required.', { itemIndex: i });
 							}
 							if (ssid.length > 32) {
-								throw new Error('WiFi Network Name (SSID) cannot exceed 32 characters.');
+								throw new NodeOperationError(this.getNode(), 'WiFi Network Name (SSID) cannot exceed 32 characters.', { itemIndex: i });
 							}
 							if (security === 'WPA') {
 								if (!password) {
-									throw new Error('WPA/WPA2 password is required.');
+									throw new NodeOperationError(this.getNode(), 'WPA/WPA2 password is required.', { itemIndex: i });
 								}
 								const isHex64 = password.length === 64 && /^[0-9a-fA-F]{64}$/.test(password);
 								if (!isHex64 && (password.length < 8 || password.length > 63)) {
-									throw new Error('WPA/WPA2 password must be between 8 and 63 characters long (or exactly 64 hex digits).');
+									throw new NodeOperationError(this.getNode(), 'WPA/WPA2 password must be between 8 and 63 characters long (or exactly 64 hex digits).', { itemIndex: i });
 								}
 							} else if (security === 'WEP') {
 								if (!password) {
-									throw new Error('WEP password is required.');
+									throw new NodeOperationError(this.getNode(), 'WEP password is required.', { itemIndex: i });
 								}
 								const len = password.length;
 								if (len === 10 || len === 26) {
 									if (!/^[0-9a-fA-F]+$/.test(password)) {
-										throw new Error('WEP password of length 10 or 26 must contain hexadecimal digits only (0-9, A-F).');
+										throw new NodeOperationError(this.getNode(), 'WEP password of length 10 or 26 must contain hexadecimal digits only (0-9, A-F).', { itemIndex: i });
 									}
 								} else if (len !== 5 && len !== 13) {
-									throw new Error('WEP password must be 5 or 13 ASCII characters, or 10 or 26 hex digits.');
+									throw new NodeOperationError(this.getNode(), 'WEP password must be 5 or 13 ASCII characters, or 10 or 26 hex digits.', { itemIndex: i });
 								}
 							}
 							contentData = { ssid, security, password };
@@ -674,10 +676,10 @@ export class Jmpy implements INodeType {
 							const bodyText = this.getNodeParameter('emailBody', i) as string;
 
 							if (!recipient) {
-								throw new Error('Email Recipient is required.');
+								throw new NodeOperationError(this.getNode(), 'Email Recipient is required.', { itemIndex: i });
 							}
 							if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)) {
-								throw new Error('Please enter a valid email address (e.g., example@domain.com).');
+								throw new NodeOperationError(this.getNode(), 'Please enter a valid email address (e.g., example@domain.com).', { itemIndex: i });
 							}
 							contentData = {
 								email: recipient,
@@ -687,22 +689,22 @@ export class Jmpy implements INodeType {
 						} else if (contentType === 'phone') {
 							const phone = (this.getNodeParameter('phoneNum', i) as string).trim();
 							if (!phone) {
-								throw new Error('Phone number is required.');
+								throw new NodeOperationError(this.getNode(), 'Phone number is required.', { itemIndex: i });
 							}
 							const cleanDigits = phone.replace(/[\s()-]/g, '').replace(/^\+/, '');
 							if (cleanDigits.length < 7 || cleanDigits.length > 15) {
-								throw new Error('Please enter a valid phone number (at least 7 to 15 digits).');
+								throw new NodeOperationError(this.getNode(), 'Please enter a valid phone number (at least 7 to 15 digits).', { itemIndex: i });
 							}
 							contentData = { phone };
 						} else if (contentType === 'sms') {
 							const phone = (this.getNodeParameter('smsPhone', i) as string).trim();
 							const message = this.getNodeParameter('smsMessage', i) as string;
 							if (!phone) {
-								throw new Error('Phone number is required.');
+								throw new NodeOperationError(this.getNode(), 'Phone number is required.', { itemIndex: i });
 							}
 							const cleanDigits = phone.replace(/[\s()-]/g, '').replace(/^\+/, '');
 							if (cleanDigits.length < 7 || cleanDigits.length > 15) {
-								throw new Error('Please enter a valid phone number (at least 7 to 15 digits).');
+								throw new NodeOperationError(this.getNode(), 'Please enter a valid phone number (at least 7 to 15 digits).', { itemIndex: i });
 							}
 							contentData = {
 								phone,
@@ -712,11 +714,11 @@ export class Jmpy implements INodeType {
 							const phone = (this.getNodeParameter('whatsappPhone', i) as string).trim();
 							const message = this.getNodeParameter('whatsappMessage', i) as string;
 							if (!phone) {
-								throw new Error('Phone number is required.');
+								throw new NodeOperationError(this.getNode(), 'Phone number is required.', { itemIndex: i });
 							}
 							const cleanDigits = phone.replace(/[\s()-]/g, '').replace(/^\+/, '');
 							if (cleanDigits.length < 7 || cleanDigits.length > 15) {
-								throw new Error('Please enter a valid phone number (at least 7 to 15 digits).');
+								throw new NodeOperationError(this.getNode(), 'Please enter a valid phone number (at least 7 to 15 digits).', { itemIndex: i });
 							}
 							contentData = {
 								phone,
@@ -726,7 +728,7 @@ export class Jmpy implements INodeType {
 							const lat = (this.getNodeParameter('locationLatitude', i) as string).trim();
 							const lng = (this.getNodeParameter('locationLongitude', i) as string).trim();
 							if (!lat || !lng) {
-								throw new Error('Latitude and Longitude are required.');
+								throw new NodeOperationError(this.getNode(), 'Latitude and Longitude are required.', { itemIndex: i });
 							}
 							contentData = {
 								latitude: parseFloat(lat),
@@ -742,15 +744,15 @@ export class Jmpy implements INodeType {
 							const url = (this.getNodeParameter('vcardUrl', i) as string).trim();
 
 							if (!first && !last) {
-								throw new Error('First Name or Last Name is required for vCard.');
+								throw new NodeOperationError(this.getNode(), 'First Name or Last Name is required for vCard.', { itemIndex: i });
 							}
 							if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-								throw new Error('Please enter a valid Work Email address in the vCard form.');
+								throw new NodeOperationError(this.getNode(), 'Please enter a valid Work Email address in the vCard form.', { itemIndex: i });
 							}
 							if (phone) {
 								const cleanDigits = phone.replace(/[\s()-]/g, '').replace(/^\+/, '');
 								if (cleanDigits.length < 7 || cleanDigits.length > 15) {
-									throw new Error('Please enter a valid Mobile Phone number in the vCard form (at least 7 to 15 digits).');
+									throw new NodeOperationError(this.getNode(), 'Please enter a valid Mobile Phone number in the vCard form (at least 7 to 15 digits).', { itemIndex: i });
 								}
 							}
 							contentData = {
@@ -799,7 +801,7 @@ export class Jmpy implements INodeType {
 								body.utm_source = utmSource;
 							}
 						} catch (e: any) {
-							if (e instanceof NodeOperationError) throw e;
+							if (e instanceof NodeOperationError || e instanceof NodeApiError) throw e;
 						}
 
 						try {
@@ -809,7 +811,7 @@ export class Jmpy implements INodeType {
 								body.utm_medium = utmMedium;
 							}
 						} catch (e: any) {
-							if (e instanceof NodeOperationError) throw e;
+							if (e instanceof NodeOperationError || e instanceof NodeApiError) throw e;
 						}
 
 						try {
@@ -819,7 +821,7 @@ export class Jmpy implements INodeType {
 								body.utm_campaign = utmCampaign;
 							}
 						} catch (e: any) {
-							if (e instanceof NodeOperationError) throw e;
+							if (e instanceof NodeOperationError || e instanceof NodeApiError) throw e;
 						}
 
 						try {
@@ -829,7 +831,7 @@ export class Jmpy implements INodeType {
 								body.utm_term = utmTerm;
 							}
 						} catch (e: any) {
-							if (e instanceof NodeOperationError) throw e;
+							if (e instanceof NodeOperationError || e instanceof NodeApiError) throw e;
 						}
 
 						try {
@@ -839,7 +841,7 @@ export class Jmpy implements INodeType {
 								body.utm_content = utmContent;
 							}
 						} catch (e: any) {
-							if (e instanceof NodeOperationError) throw e;
+							if (e instanceof NodeOperationError || e instanceof NodeApiError) throw e;
 						}
 					} else if (operation === 'get') {
 						toolName = 'getQrCode';
@@ -996,7 +998,7 @@ export class Jmpy implements INodeType {
 					const executionData = this.helpers.returnJsonArray(resultData);
 					returnData.push(...executionData);
 				} else {
-					returnData.push({ json: resultData });
+					returnData.push({ json: resultData, pairedItem: { item: i } });
 				}
 			} catch (error: any) {
 				const responseData = error?.response?.data || error?.data || error?.error || error?.context?.data;
@@ -1019,7 +1021,7 @@ export class Jmpy implements INodeType {
 				}
 
 				if (this.continueOnFail()) {
-					returnData.push({ json: { error: apiErrorMessage } });
+					returnData.push({ json: { error: apiErrorMessage }, pairedItem: { item: i } });
 				} else {
 					if (apiErrorMessage && typeof apiErrorMessage === 'string') {
 						throw new NodeApiError(this.getNode(), { message: apiErrorMessage } as any, {
