@@ -13,6 +13,12 @@ export const qrOperations: INodeProperties[] = [
 		},
 		options: [
 			{
+				name: 'Delete QR Code',
+				value: 'delete',
+				description: 'Delete a generated QR code',
+				action: 'Delete a QR code',
+			},
+			{
 				name: 'Generate QR Code',
 				value: 'generate',
 				description: 'Create standalone professional QR codes (Static or Dynamic)',
@@ -36,15 +42,8 @@ export const qrOperations: INodeProperties[] = [
 				description: 'Update an existing QR code (name, content, visual settings)',
 				action: 'Update a QR code',
 			},
-			{
-				name: 'Delete QR Code',
-				value: 'delete',
-				description: 'Delete a generated QR code',
-				action: 'Delete a QR code',
-			},
 		],
 		default: 'generate',
-		description: 'The operation to perform',
 	},
 ];
 
@@ -62,15 +61,15 @@ export const qrFields: INodeProperties[] = [
 			},
 		},
 		options: [
-			{ name: 'URL', value: 'url' },
-			{ name: 'Text', value: 'text' },
-			{ name: 'WiFi', value: 'wifi' },
-			{ name: 'vCard', value: 'vcard' },
 			{ name: 'Email', value: 'email' },
-			{ name: 'SMS', value: 'sms' },
-			{ name: 'Phone', value: 'phone' },
-			{ name: 'WhatsApp', value: 'whatsapp' },
 			{ name: 'Location', value: 'location' },
+			{ name: 'Phone', value: 'phone' },
+			{ name: 'SMS', value: 'sms' },
+			{ name: 'Text', value: 'text' },
+			{ name: 'URL', value: 'url' },
+			{ name: 'vCard', value: 'vcard' },
+			{ name: 'WhatsApp', value: 'whatsapp' },
+			{ name: 'WiFi', value: 'wifi' },
 		],
 		default: 'url',
 		description: 'The category of content to encode in the QR code',
@@ -499,8 +498,7 @@ export const qrFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		required: false,
-		description: 'Optionally associate this QR code with a Campaign',
+		description: 'Optionally associate this QR code with a Campaign. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 	},
 	{
 		displayName: 'QR Code Link Branding',
@@ -521,7 +519,7 @@ export const qrFields: INodeProperties[] = [
 		description: 'Choose whether the dynamic QR code short link uses a standard domain, branded domain, or subdomain',
 	},
 	{
-		displayName: 'Branded Domain',
+		displayName: 'Branded Domain Name or ID',
 		name: 'brandedDomain',
 		type: 'options',
 		typeOptions: {
@@ -535,10 +533,10 @@ export const qrFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'Select a verified branded domain',
+		description: 'Select a verified branded domain. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 	},
 	{
-		displayName: 'Subdomain',
+		displayName: 'Subdomain Name or ID',
 		name: 'subdomain',
 		type: 'options',
 		typeOptions: {
@@ -552,7 +550,7 @@ export const qrFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'Select a verified subdomain',
+		description: 'Select a verified subdomain. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 	},
 
 	// UTM Parameters
@@ -658,8 +656,8 @@ export const qrFields: INodeProperties[] = [
 			minValue: 20,
 			maxValue: 100,
 		},
-		default: 20,
-		description: 'Max number of results to return per page (min: 20, max: 100)',
+		default: 50,
+		description: 'Max number of results to return',
 	},
 	{
 		displayName: 'Max Pages',

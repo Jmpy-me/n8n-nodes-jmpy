@@ -299,7 +299,7 @@ export class Jmpy implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Jmpy.me',
 		name: 'jmpy',
-		icon: { light: 'file:logo.svg', dark: 'file:logo.svg' },
+		icon: { light: 'file:logo.svg', dark: 'file:logo-dark.svg' },
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["resource"] + ": " + $parameter["operation"]}}',
@@ -575,7 +575,7 @@ export class Jmpy implements INodeType {
 						const startDate = this.getNodeParameter('startDate', i, '') as string;
 						const endDate = this.getNodeParameter('endDate', i, '') as string;
 
-						let allUrls: any[] = [];
+						const allUrls: any[] = [];
 						let pageNum = 1;
 						let hasMore = true;
 
@@ -876,7 +876,7 @@ export class Jmpy implements INodeType {
 						const limit = Math.max(20, Math.min(this.getNodeParameter('limit', i, 20) as number, 100));
 						const maxPages = Math.min(this.getNodeParameter('page', i, 1) as number, 10);
 
-						let allQrs: any[] = [];
+						const allQrs: any[] = [];
 						let pageNum = 1;
 						let hasMore = true;
 

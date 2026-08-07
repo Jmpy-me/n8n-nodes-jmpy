@@ -1,0 +1,21 @@
+{
+	"folders": [
+		{
+			"name": "jmpy.me",
+			"path": "../../../.."
+		}
+	],
+	"settings": {
+		"css.validate": false,
+		"files.associations": {
+			"*.css": "tailwindcss"
+		},
+		"emmet.includeLanguages": {
+			"javascript": "javascriptreact",
+			"typescript": "typescriptreact"
+		},
+		"editor.quickSuggestions": {
+			"strings": true
+		}
+	}
+}

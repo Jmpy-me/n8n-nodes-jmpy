@@ -13,10 +13,10 @@ export const urlOperations: INodeProperties[] = [
 		},
 		options: [
 			{
-				name: 'Shorten URL',
-				value: 'shorten',
-				description: 'Create a professional branded short URL',
-				action: 'Shorten a URL',
+				name: 'Delete URL',
+				value: 'delete',
+				description: 'Delete a shortened URL',
+				action: 'Delete a URL',
 			},
 			{
 				name: 'Get URL Detail',
@@ -28,19 +28,19 @@ export const urlOperations: INodeProperties[] = [
 				name: 'List URLs',
 				value: 'list',
 				description: 'Get a list of all your short URLs',
-				action: 'List all URLs',
+				action: 'List all ur ls',
+			},
+			{
+				name: 'Shorten URL',
+				value: 'shorten',
+				description: 'Create a professional branded short URL',
+				action: 'Shorten a URL',
 			},
 			{
 				name: 'Update Short URL',
 				value: 'update',
 				description: 'Update an existing shortened URL',
 				action: 'Update a shortened URL',
-			},
-			{
-				name: 'Delete URL',
-				value: 'delete',
-				description: 'Delete a shortened URL',
-				action: 'Delete a URL',
 			},
 		],
 		default: 'shorten',
@@ -62,7 +62,7 @@ export const urlFields: INodeProperties[] = [
 		},
 		default: '',
 		placeholder: 'https://example.com/some-very-long-page',
-		description: 'The long destination URL to shorten. Must start with http:// or https://',
+		description: 'The long destination URL to shorten. Must start with http:// or https://.',
 	},
 	{
 		displayName: 'Name',
@@ -106,7 +106,7 @@ export const urlFields: INodeProperties[] = [
 		description: 'Choose how to brand your short URL',
 	},
 	{
-		displayName: 'Subdomain',
+		displayName: 'Subdomain Name or ID',
 		name: 'subdomain',
 		type: 'options',
 		typeOptions: {
@@ -120,10 +120,10 @@ export const urlFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'Choose one of your verified subdomains',
+		description: 'Choose one of your verified subdomains. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 	},
 	{
-		displayName: 'Branded Domain',
+		displayName: 'Branded Domain Name or ID',
 		name: 'brandedDomain',
 		type: 'options',
 		typeOptions: {
@@ -137,7 +137,7 @@ export const urlFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'Choose one of your verified branded domains',
+		description: 'Choose one of your verified branded domains. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 	},
 	{
 		displayName: 'Campaign Option',
@@ -167,7 +167,7 @@ export const urlFields: INodeProperties[] = [
 		description: 'Choose whether to associate this short URL with a campaign',
 	},
 	{
-		displayName: 'Select Campaign',
+		displayName: 'Select Campaign Name or ID',
 		name: 'campaignId',
 		type: 'options',
 		typeOptions: {
@@ -181,7 +181,7 @@ export const urlFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'Choose one of your campaigns',
+		description: 'Choose one of your campaigns. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 	},
 	{
 		displayName: 'New Campaign Name',
@@ -305,8 +305,8 @@ export const urlFields: INodeProperties[] = [
 			minValue: 20,
 			maxValue: 100,
 		},
-		default: 20,
-		description: 'Max number of results to return per page (min: 20, max: 100)',
+		default: 50,
+		description: 'Max number of results to return',
 	},
 	{
 		displayName: 'Max Pages',
@@ -337,12 +337,12 @@ export const urlFields: INodeProperties[] = [
 		},
 		options: [
 			{ name: 'All Time', value: 'all_time' },
-			{ name: 'Last Hour', value: 'last_hour' },
-			{ name: 'Last 24 Hours', value: 'last_24_hours' },
-			{ name: 'Last 7 Days', value: 'last_7_days' },
-			{ name: 'Last 30 Days', value: 'last_30_days' },
-			{ name: 'Last Year', value: 'last_year' },
 			{ name: 'Custom Range', value: 'custom' },
+			{ name: 'Last 24 Hours', value: 'last_24_hours' },
+			{ name: 'Last 30 Days', value: 'last_30_days' },
+			{ name: 'Last 7 Days', value: 'last_7_days' },
+			{ name: 'Last Hour', value: 'last_hour' },
+			{ name: 'Last Year', value: 'last_year' },
 		],
 		default: 'all_time',
 		description: 'Filter URLs created within this date range',
@@ -450,7 +450,7 @@ export const urlFields: INodeProperties[] = [
 		description: 'Choose whether to associate this short URL with a campaign',
 	},
 	{
-		displayName: 'Select Campaign',
+		displayName: 'Select Campaign Name or ID',
 		name: 'campaignId',
 		type: 'options',
 		typeOptions: {
@@ -464,7 +464,7 @@ export const urlFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'Choose one of your campaigns',
+		description: 'Choose one of your campaigns. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 	},
 	{
 		displayName: 'New Campaign Name',

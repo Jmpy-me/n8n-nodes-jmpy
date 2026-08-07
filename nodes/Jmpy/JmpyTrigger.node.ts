@@ -52,7 +52,7 @@ export class JmpyTrigger implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Jmpy.me Trigger',
 		name: 'jmpyTrigger',
-		icon: { light: 'file:logo.svg', dark: 'file:logo.svg' },
+		icon: { light: 'file:logo.svg', dark: 'file:logo-dark.svg' },
 		group: ['trigger'],
 		version: 1,
 		subtitle: '={{$parameter["event"]}}',
@@ -86,11 +86,6 @@ export class JmpyTrigger implements INodeType {
 				default: 'urlCreated',
 				options: [
 					{
-						name: 'New Short URL Created (Requires Business Plan)',
-						value: 'urlCreated',
-						description: 'Triggers immediately when a new short URL is created (requires Business plan)',
-					},
-					{
 						name: 'Link Clicked (Requires Business Plan)',
 						value: 'urlClicked',
 						description: 'Triggers immediately when any short URL is clicked (requires Business plan)',
@@ -111,6 +106,11 @@ export class JmpyTrigger implements INodeType {
 						description: 'Triggers immediately when a new QR code is generated (requires Business plan)',
 					},
 					{
+						name: 'New Short URL Created (Requires Business Plan)',
+						value: 'urlCreated',
+						description: 'Triggers immediately when a new short URL is created (requires Business plan)',
+					},
+					{
 						name: 'QR Code Scanned (Requires Business Plan)',
 						value: 'qrScanned',
 						description: 'Triggers immediately when any QR code is scanned (requires Business plan)',
@@ -129,7 +129,7 @@ export class JmpyTrigger implements INodeType {
 				type: 'options',
 				options: [
 					{
-						name: 'Select from List',
+						name: 'Select From List',
 						value: 'list',
 						description: 'Select short URLs from a dropdown list',
 					},
@@ -159,8 +159,7 @@ export class JmpyTrigger implements INodeType {
 					loadOptionsMethod: 'getShortUrls',
 				},
 				default: [],
-				required: false,
-				description: 'Select one or more short URLs to monitor. Leave empty to monitor all.',
+				description: 'Select one or more short URLs to monitor. Leave empty to monitor all. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 				displayOptions: {
 					show: {
 						event: [
@@ -180,7 +179,6 @@ export class JmpyTrigger implements INodeType {
 				name: 'customShortCodes',
 				type: 'string',
 				default: '',
-				required: false,
 				placeholder: 'promo, summer-sale, winter2026',
 				description: 'Enter one or more short codes/slugs separated by commas. Leave empty to monitor all.',
 				displayOptions: {
@@ -203,7 +201,7 @@ export class JmpyTrigger implements INodeType {
 				type: 'options',
 				options: [
 					{
-						name: 'Select from List',
+						name: 'Select From List',
 						value: 'list',
 						description: 'Select QR codes from a dropdown list',
 					},
@@ -232,8 +230,7 @@ export class JmpyTrigger implements INodeType {
 					loadOptionsMethod: 'getQrCodes',
 				},
 				default: [],
-				required: false,
-				description: 'Select one or more QR codes to monitor. Leave empty to monitor all.',
+				description: 'Select one or more QR codes to monitor. Leave empty to monitor all. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 				displayOptions: {
 					show: {
 						event: [
@@ -252,7 +249,6 @@ export class JmpyTrigger implements INodeType {
 				name: 'customQrCodeIds',
 				type: 'string',
 				default: '',
-				required: false,
 				placeholder: 'qr-uuid-1, qr-uuid-2',
 				description: 'Enter one or more QR Code UUIDs separated by commas. Leave empty to monitor all.',
 				displayOptions: {
@@ -272,7 +268,6 @@ export class JmpyTrigger implements INodeType {
 				name: 'webhookTunnelUrl',
 				type: 'string',
 				default: '',
-				required: false,
 				placeholder: 'https://xxxx.ngrok-free.dev',
 				description: 'If you run n8n locally (e.g. via Docker on localhost) and get a localhost error, enter your public tunnel URL here to override the domain. Cloud/production users can ignore this field.',
 			},
@@ -285,8 +280,7 @@ export class JmpyTrigger implements INodeType {
 					loadOptionsMethod: 'getCampaigns',
 				},
 				default: '',
-				required: false,
-				description: 'Select a Campaign to filter by. Only events for URLs/QRs inside this campaign will trigger.',
+				description: 'Select a Campaign to filter by. Only events for URLs/QRs inside this campaign will trigger. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
 				displayName: 'Link Branding',
@@ -311,7 +305,7 @@ export class JmpyTrigger implements INodeType {
 				description: 'Filter by link structure style. Leave empty to match all link types.',
 			},
 			{
-				displayName: 'QR code Link Branding',
+				displayName: 'QR Code Link Branding',
 				name: 'url_type',
 				type: 'multiOptions',
 				options: [
@@ -332,7 +326,7 @@ export class JmpyTrigger implements INodeType {
 				description: 'Filter by QR code branding style. Leave empty to match all branding types.',
 			},
 			{
-				displayName: 'Branded Domains',
+				displayName: 'Branded Domain Names or IDs',
 				name: 'branded_domain',
 				type: 'multiOptions',
 				typeOptions: {
@@ -346,10 +340,10 @@ export class JmpyTrigger implements INodeType {
 						],
 					},
 				},
-				description: 'Filter by specific branded domains. If empty, triggers for all branded domains. (Only applies to Branded Domain Link Branding).',
+				description: 'Filter by specific branded domains. If empty, triggers for all branded domains. (Only applies to Branded Domain Link Branding). Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
-				displayName: 'Subdomains',
+				displayName: 'Subdomain Names or IDs',
 				name: 'subdomain',
 				type: 'multiOptions',
 				typeOptions: {
@@ -363,7 +357,7 @@ export class JmpyTrigger implements INodeType {
 						],
 					},
 				},
-				description: 'Filter by specific subdomains. If empty, triggers for all subdomains. (Only applies to Subdomain Link Branding).',
+				description: 'Filter by specific subdomains. If empty, triggers for all subdomains. (Only applies to Subdomain Link Branding). Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			// Additional filters
 			{
@@ -375,18 +369,20 @@ export class JmpyTrigger implements INodeType {
 				description: 'Filter the events by payload values before triggering',
 				options: [
 					{
-						displayName: 'Is Dynamic',
-						name: 'is_dynamic',
+						displayName: 'Custom Alias',
+						name: 'custom_alias',
 						type: 'boolean',
 						default: false,
-						description: 'Whether the URL or QR code is dynamic. Use case: monitor links where the destination can change.',
-					},
-					{
-						displayName: 'Is Password Protected',
-						name: 'is_password_protected',
-						type: 'boolean',
-						default: false,
-						description: 'Whether the URL or QR code has password protection. Use case: track scans/clicks of secure assets.',
+						displayOptions: {
+							hide: {
+								'/event': [
+									'qrCreated',
+									'qrScanned',
+									'qrScannedUnique',
+								],
+							},
+						},
+						description: 'Whether the short URL has a custom alias. Use case: track links with any custom alias.',
 					},
 					{
 						displayName: 'Has UTM Parameters',
@@ -402,7 +398,37 @@ export class JmpyTrigger implements INodeType {
 								],
 							},
 						},
-						description: 'Only trigger if the link contains Google Analytics UTM tracking parameters. Use case: track marketing campaigns.',
+						description: 'Whether to only trigger if the link contains Google Analytics UTM tracking parameters. Use case: track marketing campaigns.',
+					},
+					{
+						displayName: 'Is Dynamic',
+						name: 'is_dynamic',
+						type: 'boolean',
+						default: false,
+						description: 'Whether the URL or QR code is dynamic. Use case: monitor links where the destination can change.',
+					},
+					{
+						displayName: 'Is Expiring',
+						name: 'is_expiring',
+						type: 'boolean',
+						default: false,
+						displayOptions: {
+							hide: {
+								'/event': [
+									'qrCreated',
+									'qrScanned',
+									'qrScannedUnique',
+								],
+							},
+						},
+						description: 'Whether to only trigger for links/QR codes that have a set expiration date/time configured. Use case: track temporary links.',
+					},
+					{
+						displayName: 'Is Password Protected',
+						name: 'is_password_protected',
+						type: 'boolean',
+						default: false,
+						description: 'Whether the URL or QR code has password protection. Use case: track scans/clicks of secure assets.',
 					},
 					{
 						displayName: 'Tags (Comma-Separated)',
@@ -420,23 +446,10 @@ export class JmpyTrigger implements INodeType {
 						},
 						description: 'Only trigger if the link/QR code contains all these specified tags. Separate tags with commas. Use case: filter by custom tag categories.',
 					},
-					{
-						displayName: 'Is Expiring',
-						name: 'is_expiring',
-						type: 'boolean',
-						default: false,
-						description: 'Only trigger for links/QR codes that have a set expiration date/time configured. Use case: track temporary links.',
-					},
-					{
-						displayName: 'Custom Alias',
-						name: 'custom_alias',
-						type: 'boolean',
-						default: false,
-						description: 'Whether the short URL has a custom alias. Use case: track links with any custom alias.',
-					},
 				],
 			},
 		],
+		usableAsTool: true,
 	};
 
 	methods = {
@@ -570,7 +583,7 @@ export class JmpyTrigger implements INodeType {
 					const data = parseMcpResponse(responseData);
 					const items = data.branded || [];
 					if (items.length === 0) {
-						return [{ name: 'No branded domain is added yet', value: '' }];
+						return [{ name: 'No Branded Domain Is Added Yet', value: '' }];
 					}
 					return items.map((item: any) => ({
 						name: item.domain,
