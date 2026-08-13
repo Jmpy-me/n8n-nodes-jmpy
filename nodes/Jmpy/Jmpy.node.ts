@@ -388,15 +388,18 @@ export class Jmpy implements INodeType {
 					}
 					const responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'jmpyOAuth2Api', {
 						method: 'POST',
-						url: `${API_BASE_URL}/mcp/execute/listBrandedDomains`,
+						url: `${API_BASE_URL}/mcp/execute/getUserDomains`,
 						body: { limit: 100, is_polling: true },
 						json: true,
 					});
 					const data = parseMcpResponse(responseData);
-					const items = data.domains || [];
+					const items = data.branded || data.domains || [];
+					if (items.length === 0) {
+						return [{ name: 'No Branded Domain Is Added Yet', value: '' }];
+					}
 					return items.map((item: any) => ({
-						name: item.domain || item.id,
-						value: item.domain || item.id,
+						name: item.domain || item.name || item.id,
+						value: item.domain || item.name || item.id,
 					}));
 				} catch (error) {
 					throw new NodeApiError(this.getNode(), error as any);
@@ -794,54 +797,34 @@ export class Jmpy implements INodeType {
 							}
 						};
 
-						try {
-							const utmSource = this.getNodeParameter('utmSource', i) as string;
-							if (utmSource) {
-								validateUtmNoSpaces('UTM Source', utmSource);
-								body.utm_source = utmSource;
-							}
-						} catch (e: any) {
-							if (e instanceof NodeOperationError || e instanceof NodeApiError) throw e;
+						const utmSource = this.getNodeParameter('utmSource', i, '') as string;
+						if (utmSource) {
+							validateUtmNoSpaces('UTM Source', utmSource);
+							body.utm_source = utmSource;
 						}
 
-						try {
-							const utmMedium = this.getNodeParameter('utmMedium', i) as string;
-							if (utmMedium) {
-								validateUtmNoSpaces('UTM Medium', utmMedium);
-								body.utm_medium = utmMedium;
-							}
-						} catch (e: any) {
-							if (e instanceof NodeOperationError || e instanceof NodeApiError) throw e;
+						const utmMedium = this.getNodeParameter('utmMedium', i, '') as string;
+						if (utmMedium) {
+							validateUtmNoSpaces('UTM Medium', utmMedium);
+							body.utm_medium = utmMedium;
 						}
 
-						try {
-							const utmCampaign = this.getNodeParameter('utmCampaign', i) as string;
-							if (utmCampaign) {
-								validateUtmNoSpaces('UTM Campaign', utmCampaign);
-								body.utm_campaign = utmCampaign;
-							}
-						} catch (e: any) {
-							if (e instanceof NodeOperationError || e instanceof NodeApiError) throw e;
+						const utmCampaign = this.getNodeParameter('utmCampaign', i, '') as string;
+						if (utmCampaign) {
+							validateUtmNoSpaces('UTM Campaign', utmCampaign);
+							body.utm_campaign = utmCampaign;
 						}
 
-						try {
-							const utmTerm = this.getNodeParameter('utmTerm', i) as string;
-							if (utmTerm) {
-								validateUtmNoSpaces('UTM Term', utmTerm);
-								body.utm_term = utmTerm;
-							}
-						} catch (e: any) {
-							if (e instanceof NodeOperationError || e instanceof NodeApiError) throw e;
+						const utmTerm = this.getNodeParameter('utmTerm', i, '') as string;
+						if (utmTerm) {
+							validateUtmNoSpaces('UTM Term', utmTerm);
+							body.utm_term = utmTerm;
 						}
 
-						try {
-							const utmContent = this.getNodeParameter('utmContent', i) as string;
-							if (utmContent) {
-								validateUtmNoSpaces('UTM Content', utmContent);
-								body.utm_content = utmContent;
-							}
-						} catch (e: any) {
-							if (e instanceof NodeOperationError || e instanceof NodeApiError) throw e;
+						const utmContent = this.getNodeParameter('utmContent', i, '') as string;
+						if (utmContent) {
+							validateUtmNoSpaces('UTM Content', utmContent);
+							body.utm_content = utmContent;
 						}
 					} else if (operation === 'get') {
 						toolName = 'getQrCode';

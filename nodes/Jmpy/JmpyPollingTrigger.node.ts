@@ -683,6 +683,35 @@ export class JmpyPollingTrigger implements INodeType {
 					throw new NodeApiError(this.getNode(), error as any);
 				}
 			},
+			async getQrCodes(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				try {
+					const credentials = await this.getCredentials('jmpyOAuth2Api');
+					if (!credentials || !credentials.oauthTokenData || !(credentials.oauthTokenData as any).access_token) {
+						throw new NodeApiError(this.getNode(), { message: 'Authentication required' } as any, {
+							message: 'Authentication required',
+							description: 'Please connect and authenticate your Jmpy.me account first.',
+						});
+					}
+					const responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'jmpyOAuth2Api', {
+						method: 'POST',
+						url: `${API_BASE_URL}/mcp/execute/listQrCodes`,
+						body: { limit: 100, sortBy: 'created_at', sortOrder: 'desc', qrType: 'tracked', is_polling: true },
+						json: true,
+					});
+					const data = parseMcpResponse(responseData);
+					const items = data.qrCodes || [];
+					const options: INodePropertyOptions[] = [];
+					for (const item of items) {
+						options.push({
+							name: item.name || `QR Code (${item.content_type || 'url'})`,
+							value: item.id,
+						});
+					}
+					return options;
+				} catch (error) {
+					throw new NodeApiError(this.getNode(), error as any);
+				}
+			},
 			async getCampaigns(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 				try {
 					const credentials = await this.getCredentials('jmpyOAuth2Api');
@@ -798,8 +827,9 @@ export class JmpyPollingTrigger implements INodeType {
 		}
 
 		const makeApiRequest = async (url: string, body: any) => {
+			let response: any;
 			try {
-				const response = await this.helpers.httpRequestWithAuthentication.call(this, 'jmpyOAuth2Api', {
+				response = await this.helpers.httpRequestWithAuthentication.call(this, 'jmpyOAuth2Api', {
 					method: 'POST',
 					url,
 					body,
@@ -807,36 +837,35 @@ export class JmpyPollingTrigger implements INodeType {
 					returnFullResponse: true,
 					ignoreHttpStatusErrors: true,
 				});
-
-				const statusCode = response.statusCode || response.status || 200;
-				if (statusCode >= 400) {
-					const responseBody = response.body || response;
-					let errorMessage = 'Failed to fetch polling data';
-					
-					if (responseBody && typeof responseBody === 'object') {
-						errorMessage = responseBody.error || responseBody.detail || responseBody.message || errorMessage;
-					} else if (typeof responseBody === 'string') {
-						try {
-							const parsed = JSON.parse(responseBody);
-							errorMessage = parsed.error || parsed.detail || parsed.message || errorMessage;
-						} catch (error) {
-							void error;
-							errorMessage = responseBody || errorMessage;
-						}
-					}
-					
-					throw new NodeOperationError(this.getNode(), errorMessage);
-				}
-
-				return response.body || response;
 			} catch (error: any) {
-				if (error instanceof NodeOperationError || error instanceof NodeApiError) throw error;
 				const apiErr = error?.error?.error || error?.response?.data?.error || error?.response?.data?.message || error?.message;
 				if (apiErr && typeof apiErr === 'string') {
 					throw new NodeApiError(this.getNode(), error as any, { message: apiErr });
 				}
 				throw new NodeApiError(this.getNode(), error as any);
 			}
+
+			const statusCode = response.statusCode || response.status || 200;
+			if (statusCode >= 400) {
+				const responseBody = response.body || response;
+				let errorMessage = 'Failed to fetch polling data';
+				
+				if (responseBody && typeof responseBody === 'object') {
+					errorMessage = responseBody.error || responseBody.detail || responseBody.message || errorMessage;
+				} else if (typeof responseBody === 'string') {
+					try {
+						const parsed = JSON.parse(responseBody);
+						errorMessage = parsed.error || parsed.detail || parsed.message || errorMessage;
+					} catch (error) {
+						void error;
+						errorMessage = responseBody || errorMessage;
+					}
+				}
+				
+				throw new NodeOperationError(this.getNode(), errorMessage);
+			}
+
+			return response.body || response;
 		};
 
 		if (event === 'newShortUrl') {
