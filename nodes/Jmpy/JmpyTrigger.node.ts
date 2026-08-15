@@ -449,7 +449,6 @@ export class JmpyTrigger implements INodeType {
 				],
 			},
 		],
-		usableAsTool: true,
 	};
 
 	methods = {

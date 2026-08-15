@@ -649,7 +649,6 @@ export class JmpyPollingTrigger implements INodeType {
 				],
 			},
 		],
-		usableAsTool: true,
 	};
 
 	methods = {
